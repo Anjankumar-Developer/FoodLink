@@ -217,20 +217,6 @@ export default function GeminiChatbot() {
   return (
     <>
       {/* Floating Trigger Button in Bottom Right */}
-      {!isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-40 flex items-center gap-2.5 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 group active:scale-95"
-          title="Open FOODLINK AI Chatbot"
-        >
-          <div className="relative">
-            <Bot className="w-5 h-5 transition-transform group-hover:scale-110" />
-            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-300 rounded-full animate-ping" />
-          </div>
-          <span className="text-xs font-bold tracking-wide">Rescue Assistant</span>
-        </button>
-      )}
-
       {/* Main Chat Drawer / Window */}
       {isOpen && (
         <div
