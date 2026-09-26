@@ -19,7 +19,55 @@ import GoogleMapsGroundingSearch from '../components/maps/GoogleMapsGroundingSea
 import { api } from '../services/api';
 import { INDIA_MAP_ENTITIES } from '../data/mockData';
 
-const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+const TELANGANA_BOUNDS = [
+  [15.8, 77.0],
+  [19.9, 81.7],
+];
+
+const TELANGANA_OUTLINE = [
+  [17.1944, 77.2800],
+  [17.1443, 77.6764],
+  [17.2120, 78.0650],
+  [17.1767, 78.4482],
+  [17.3020, 78.9035],
+  [17.5920, 79.3337],
+  [18.2578, 79.9567],
+  [18.7080, 80.4125],
+  [19.2333, 80.9353],
+  [19.6617, 80.9728],
+  [19.8180, 80.6217],
+  [19.8678, 79.9975],
+  [19.7721, 79.1550],
+  [19.4377, 78.4535],
+  [18.9054, 77.9745],
+  [18.2065, 77.6206],
+  [17.6809, 77.2417],
+  [17.1944, 77.2800],
+];
+
+const TELANGANA_ROUTE_PAIRS = [
+  ['ind-rest-hyd-1', 'ind-sh-hyd-1'],
+  ['ind-rest-hyd-2', 'ind-sh-hyd-2'],
+  ['ind-rest-hyd-3', 'ind-sh-hyd-3'],
+  ['ind-rest-hyd-4', 'ind-sh-hyd-1'],
+  ['ind-rest-war-1', 'ind-sh-war-1'],
+  ['ind-rest-war-2', 'ind-sh-war-1'],
+  ['ind-rest-kh-1', 'ind-sh-kh-1'],
+  ['ind-rest-kh-2', 'ind-sh-kh-1'],
+  ['ind-rest-nzm-1', 'ind-sh-nzm-1'],
+  ['ind-rest-rgd-1', 'ind-sh-rgd-1'],
+  ['ind-rest-adil-1', 'ind-sh-adil-1'],
+  ['ind-rest-mbn-1', 'ind-sh-mbn-1'],
+  ['ind-rest-rch-1', 'ind-sh-rch-1'],
+  ['ind-rest-vkm-1', 'ind-sh-rgd-1'],
+  ['ind-rest-hyd-1', 'ind-vol-hyd-1'],
+  ['ind-rest-hyd-2', 'ind-vol-hyd-2'],
+  ['ind-rest-war-1', 'ind-vol-war-1'],
+  ['ind-rest-kh-1', 'ind-vol-kh-1'],
+  ['ind-rest-nzm-1', 'ind-vol-nzm-1'],
+  ['ind-rest-mbn-1', 'ind-vol-mbn-1'],
+  ['ind-rest-rch-1', 'ind-vol-rch-1'],
+];
 
 const urgencyRank = { SAFE: 0, 'AT RISK': 1, URGENT: 2, CRITICAL: 3 };
 
@@ -44,6 +92,8 @@ const coordinate = (latitude, longitude) => {
     : null;
 };
 
+const isValidPosition = (value) => Array.isArray(value) && value.length === 2 && Number.isFinite(value[0]) && Number.isFinite(value[1]);
+
 export default function RescueMapPage() {
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
@@ -63,6 +113,7 @@ export default function RescueMapPage() {
   const [mapEntities, setMapEntities] = useState(INDIA_MAP_ENTITIES);
   const [activeRescues, setActiveRescues] = useState([]);
   const [selectedRescue, setSelectedRescue] = useState(null);
+  const [routeSegments, setRouteSegments] = useState([]);
   const [mapLoading, setMapLoading] = useState(false);
   const [mapError, setMapError] = useState(null);
 
@@ -70,10 +121,19 @@ export default function RescueMapPage() {
     const useIndiaMockMap = true;
 
     if (useIndiaMockMap) {
-      setMapEntities(INDIA_MAP_ENTITIES.map((item) => ({
-        ...item,
-        position: [item.lat, item.lng],
-      })));
+      const validEntities = INDIA_MAP_ENTITIES
+        .filter((item) => {
+          const lat = Number(item.lat);
+          const lng = Number(item.lng);
+          return Number.isFinite(lat) && Number.isFinite(lng) && lat >= 15.8 && lat <= 19.9 && lng >= 77.0 && lng <= 81.7;
+        })
+        .map((item) => ({
+          ...item,
+          position: isValidPosition([item.lat, item.lng]) ? [item.lat, item.lng] : null,
+        }))
+        .filter((item) => item.position);
+
+      setMapEntities(validEntities);
       setMapLoading(false);
       return;
     }
@@ -113,77 +173,42 @@ export default function RescueMapPage() {
       .finally(() => setMapLoading(false));
   }, []);
 
-  // Initialize map view for India and optionally use Google Maps when a key is configured.
+  // Initialize map view for India with Telangana-focused framing in Leaflet.
   useEffect(() => {
     if (!mapContainerRef.current) return;
     if (mapInstanceRef.current) return;
 
-    if (GOOGLE_MAPS_API_KEY) {
-      const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
-      const onLoad = () => {
-        const map = new window.google.maps.Map(mapContainerRef.current, {
-          center: { lat: 22.5937, lng: 78.9629 },
-          zoom: 5,
-          mapTypeId: 'roadmap',
-          streetViewControl: false,
-        });
-
-        mapInstanceRef.current = map;
-        const bounds = new window.google.maps.LatLngBounds();
-        INDIA_MAP_ENTITIES.forEach((entity) => {
-          const position = { lat: entity.lat, lng: entity.lng };
-          bounds.extend(position);
-          new window.google.maps.Marker({
-            position,
-            map,
-            title: entity.name,
-          });
-        });
-        map.fitBounds(bounds, 36);
-      };
-
-      if (window.google?.maps) {
-        onLoad();
-        return;
-      }
-
-      if (existingScript) {
-        existingScript.addEventListener('load', onLoad, { once: true });
-      } else {
-        const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}`;
-        script.async = true;
-        script.defer = true;
-        script.addEventListener('load', onLoad, { once: true });
-        document.head.appendChild(script);
-      }
-
-      return () => {
-        if (existingScript) {
-          existingScript.removeEventListener('load', onLoad);
-        }
-      };
-    }
-
     const map = L.map(mapContainerRef.current, {
-      center: [22.5937, 78.9629],
-      zoom: 5,
+      center: [17.9, 79.5],
+      zoom: 7,
       zoomControl: true,
+      minZoom: 6,
+      maxZoom: 18,
     });
 
-    L.tileLayer(
-      'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-      {
-        attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
-        maxZoom: 19,
-        subdomains: 'abcd',
-      }
-    ).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19,
+    }).addTo(map);
+
+    L.polygon(TELANGANA_OUTLINE, {
+      color: '#2f6fdc',
+      weight: 2,
+      opacity: 0.9,
+      fillColor: '#60a5fa',
+      fillOpacity: 0.08,
+      dashArray: '10, 8',
+    }).addTo(map);
+
+    L.control.scale({ position: 'bottomleft', imperial: false }).addTo(map);
 
     markersLayerRef.current = L.layerGroup().addTo(map);
     routesLayerRef.current = L.layerGroup().addTo(map);
 
     mapInstanceRef.current = map;
+
+    const bounds = L.latLngBounds(TELANGANA_BOUNDS);
+    map.fitBounds(bounds, { padding: [30, 30] });
 
     const invalidateTimer = setTimeout(() => {
       map.invalidateSize();
@@ -201,6 +226,64 @@ export default function RescueMapPage() {
       mapInstanceRef.current = null;
     };
   }, []);
+
+  const fetchRoadRoute = async (from, to) => {
+    if (!from || !to) return null;
+
+    try {
+      const response = await fetch(
+        `https://router.project-osrm.org/route/v1/driving/${from[1]},${from[0]};${to[1]},${to[0]}?overview=full&geometries=geojson&steps=false`
+      );
+
+      if (!response.ok) return null;
+
+      const data = await response.json();
+      const coordinates = data?.routes?.[0]?.geometry?.coordinates;
+      if (!Array.isArray(coordinates) || coordinates.length === 0) return null;
+
+      return coordinates.map(([lng, lat]) => [lat, lng]);
+    } catch (error) {
+      console.warn('OSRM route lookup failed:', error);
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const buildRouteSegments = async () => {
+      const entityMap = new Map(mapEntities.map((entity) => [entity.id, entity]));
+      const segments = [];
+
+      for (const [fromId, toId] of TELANGANA_ROUTE_PAIRS) {
+        const from = entityMap.get(fromId);
+        const to = entityMap.get(toId);
+
+        if (!from?.position || !to?.position) continue;
+
+        const roadRoute = await fetchRoadRoute(from.position, to.position);
+        const isVolunteerLink = to.type === 'volunteer';
+
+        segments.push({
+          path: roadRoute || [from.position, to.position],
+          color: isVolunteerLink ? '#3b82f6' : '#16a34a',
+          weight: isVolunteerLink ? 2 : 3,
+          dashArray: isVolunteerLink ? '5, 8' : '8, 8',
+          opacity: isVolunteerLink ? 0.8 : 0.9,
+        });
+      }
+
+      if (!cancelled) {
+        setRouteSegments(segments);
+      }
+    };
+
+    buildRouteSegments();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [mapEntities]);
 
   // Update Markers & Polylines when filters change
   useEffect(() => {
@@ -243,6 +326,7 @@ export default function RescueMapPage() {
     };
 
     const visibleEntities = mapEntities.filter((entity) => {
+      if (!entity.position || !isValidPosition(entity.position)) return false;
       if (activeFilters.all) return true;
       if (entity.type === 'restaurant' && !activeFilters.restaurants) return false;
       if (entity.type === 'recipient' && !activeFilters.recipients) return false;
@@ -276,23 +360,19 @@ export default function RescueMapPage() {
       markersLayerRef.current.addLayer(marker);
     });
 
-    // Render only the selected rescue route from backend coordinates.
-    if (activeFilters.rescues && selectedRescue) {
-      const routeCoordinates = [
-        coordinate(selectedRescue.restaurant?.latitude, selectedRescue.restaurant?.longitude),
-        coordinate(selectedRescue.volunteer?.latitude, selectedRescue.volunteer?.longitude),
-        coordinate(selectedRescue.recipient?.latitude, selectedRescue.recipient?.longitude),
-      ].filter(Boolean);
-      const polyline = L.polyline(routeCoordinates, {
-        color: '#16a34a',
-        weight: 4,
-        dashArray: '8, 8',
-        opacity: 0.8,
+    // Render visible launch routes between donor kitchens and nearby shelters/volunteers.
+    if (activeFilters.rescues || activeFilters.all) {
+      routeSegments.forEach((segment) => {
+        const polyline = L.polyline(segment.path, {
+          color: segment.color,
+          weight: segment.weight,
+          dashArray: segment.dashArray,
+          opacity: segment.opacity,
+        });
+        routesLayerRef.current.addLayer(polyline);
       });
-
-      routesLayerRef.current.addLayer(polyline);
     }
-  }, [activeFilters, mapEntities, selectedRescue]);
+  }, [activeFilters, mapEntities, selectedRescue, routeSegments]);
 
   const toggleFilter = (filterKey) => {
     setActiveFilters((prev) => {
@@ -322,10 +402,10 @@ export default function RescueMapPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            India Food Rescue Geospatial Network
+            Telangana Food Rescue Network
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Live telemetry tracking of surplus food batches, verified shelters, and courier corridors across India.
+            Live telemetry for Telangana logistics corridors, donor hubs, shelter demand, and volunteer dispatch routes across the state.
           </p>
         </div>
 
