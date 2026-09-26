@@ -30,7 +30,9 @@ class DataLoader:
 
         Args:
             limit: Maximum number of records to load (None for all)
-            focus_telangana: Whether to focus on Telangana region for performance
+            focus_telangana: Deprecated flag kept for compatibility; the bundled data
+                should be loaded as-is because the app is designed to work across all
+                Indian states represented in the CSVs.
 
         Returns:
             Number of restaurants loaded
@@ -50,11 +52,12 @@ class DataLoader:
                     if limit and i >= limit:
                         break
 
-                    # Skip if not in Telangana region (if focusing on Telangana)
+                    # The project dataset contains restaurant rows from multiple Indian states.
+                    # Filter only when an explicit regional focus is required; do not drop
+                    # valid records from the default app flow.
                     if focus_telangana:
-                        # Simple check for Telangana areas - this could be enhanced
-                        area = row.get('area', '').lower()
-                        local_address = row.get('local address', '').lower()
+                        area = (row.get('area', '') or '').lower()
+                        local_address = (row.get('local address', '') or '').lower()
                         telangana_indicators = ['telangana', 'hyderabad', 'karimnagar', 'warangal',
                                               'khammam', 'nalgonda', 'rangareddy', 'medak']
 
@@ -468,7 +471,7 @@ class DataLoader:
 
         results = {
             'food_taxonomy': self.load_food_taxonomy(),
-            'restaurants': self.load_restaurants(limit=restaurant_limit, focus_telangana=True),
+            'restaurants': self.load_restaurants(limit=restaurant_limit, focus_telangana=False),
             'recipients': self.load_recipients(),
             'donations': self.load_donations(),
             'volunteers': self.load_volunteers()

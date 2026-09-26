@@ -1,40 +1,70 @@
-import sqlite3
+import logging
+import sys
 from pathlib import Path
 
-from sqlalchemy import create_engine
+BACKEND_ROOT = Path(__file__).resolve().parents[1]
+if str(BACKEND_ROOT) not in sys.path:
+    sys.path.insert(0, str(BACKEND_ROOT))
 
 from app.config import settings
-from app.database import Base
-from app.models.user import User  # Ensure auth schema is included in metadata before create_all()
+from app.database import Base, SessionLocal, engine
+from app.models import *  # noqa: F401,F403
+from app.services.data_loader import DataLoader
+from app.services.matching_engine import MatchingEngine
+
+logger = logging.getLogger(__name__)
 
 
-def _get_sqlite_path():
-    if not settings.DATABASE_URL.startswith("sqlite"):
-        return None
+def generate_seed_matches(session) -> int:
+    """Populate the matches table from the loaded donation and shelter datasets.
 
-    relative_path = settings.DATABASE_URL.replace("sqlite:///", "", 1)
-    if relative_path.startswith("./"):
-        relative_path = relative_path[2:]
+    This keeps the app production-ready without forcing a manual match-generation
+    step in the UI. Only generate records when the table is empty so repeated
+    startup calls do not duplicate data.
+    """
+    existing_count = session.query(Match).count()
+    if existing_count > 0:
+        logger.info("Match table already contains %s rows; skipping automatic generation.", existing_count)
+        return existing_count
 
-    return Path(relative_path).resolve() if not Path(relative_path).is_absolute() else Path(relative_path)
+    matching_engine = MatchingEngine(session)
+    donations = session.query(Donation).order_by(Donation.id).all()
+    generated_total = 0
+
+    for donation in donations:
+        saved_matches = matching_engine.generate_and_save_matches_for_donation(str(donation.id))
+        generated_total += len(saved_matches)
+
+    logger.info("Generated %s match rows from %s donations.", generated_total, len(donations))
+    return generated_total
 
 
-def init_db():
-    sqlite_path = _get_sqlite_path()
+def init_db(reset: bool = False) -> None:
+    """Create tables and seed the SQLite database with the bundled CSV datasets.
 
-    if sqlite_path and sqlite_path.exists():
-        try:
-            with sqlite3.connect(str(sqlite_path)) as connection:
-                columns = [row[1] for row in connection.execute("PRAGMA table_info(users)").fetchall()]
-                if not columns or "password_hash" not in columns or "organization" not in columns:
-                    connection.close()
-                    sqlite_path.unlink()
-        except Exception:
-            if sqlite_path.exists():
-                sqlite_path.unlink()
+    The app should not delete the live SQLite file during normal startup; that can
+    fail when the database is already open by a running server or when startup is
+    triggered more than once. For a clean reset, use an explicit maintenance flow
+    instead of the normal application bootstrap path.
+    """
+    if reset:
+        Base.metadata.drop_all(bind=engine)
 
-    engine = create_engine(settings.DATABASE_URL)
     Base.metadata.create_all(bind=engine)
+
+    data_dir = Path(__file__).resolve().parents[2] / "datasets" / "Datasets"
+    if not data_dir.exists():
+        logger.warning("Dataset directory not found at %s; database tables were created without seeding.", data_dir)
+        return
+
+    try:
+        with SessionLocal() as session:
+            loader = DataLoader(session)
+            counts = loader.load_all_data()
+            generate_seed_matches(session)
+            logger.info("Database initialization complete with dataset counts: %s", counts)
+    except Exception as exc:  # pragma: no cover - defensive bootstrapping
+        logger.exception("Database tables were created but dataset seeding failed: %s", exc)
 
 
 if __name__ == "__main__":

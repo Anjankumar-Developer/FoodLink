@@ -1,6 +1,8 @@
-from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
+
+from pydantic import BaseModel, ConfigDict
+
 
 class PickupBase(BaseModel):
     match_id: int
@@ -11,12 +13,13 @@ class PickupBase(BaseModel):
     pickup_qr: Optional[str] = None
     delivery_qr: Optional[str] = None
 
+
 class PickupCreate(PickupBase):
     pass
+
 
 class Pickup(PickupBase):
     id: int
     created_at: datetime
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

@@ -1,6 +1,8 @@
-from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
+
+from pydantic import BaseModel, ConfigDict
+
 
 class DonationBase(BaseModel):
     restaurant_id: int
@@ -14,12 +16,13 @@ class DonationBase(BaseModel):
     storage_condition: Optional[str] = None
     status: Optional[str] = "available"
 
+
 class DonationCreate(DonationBase):
     pass
+
 
 class Donation(DonationBase):
     id: int
     created_at: datetime
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

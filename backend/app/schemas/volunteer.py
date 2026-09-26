@@ -1,6 +1,8 @@
-from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
+
+from pydantic import BaseModel, ConfigDict
+
 
 class VolunteerBase(BaseModel):
     name: str
@@ -9,12 +11,13 @@ class VolunteerBase(BaseModel):
     latitude: Optional[str] = None
     longitude: Optional[str] = None
 
+
 class VolunteerCreate(VolunteerBase):
     pass
+
 
 class Volunteer(VolunteerBase):
     id: int
     created_at: datetime
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

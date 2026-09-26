@@ -1,6 +1,8 @@
-from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
+
+from pydantic import BaseModel, ConfigDict
+
 
 class RestaurantBase(BaseModel):
     name: str
@@ -13,12 +15,13 @@ class RestaurantBase(BaseModel):
     food_categories: Optional[str] = None
     verified: Optional[bool] = False
 
+
 class RestaurantCreate(RestaurantBase):
     pass
+
 
 class Restaurant(RestaurantBase):
     id: int
     created_at: datetime
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

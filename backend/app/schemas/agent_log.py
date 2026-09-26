@@ -1,9 +1,11 @@
-from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
 
+from pydantic import BaseModel, ConfigDict
+
+
 class AgentLogBase(BaseModel):
-    donation_id: int
+    donation_id: Optional[int] = None
     agent_name: str
     action: str
     input_summary: Optional[str] = None
@@ -11,12 +13,13 @@ class AgentLogBase(BaseModel):
     status: Optional[str] = None
     execution_time_ms: Optional[int] = None
 
+
 class AgentLogCreate(AgentLogBase):
     pass
+
 
 class AgentLog(AgentLogBase):
     id: int
     created_at: datetime
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

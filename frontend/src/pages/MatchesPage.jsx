@@ -39,14 +39,24 @@ export default function MatchesPage() {
     setLoading(true);
     setError(null);
     try {
+      const fetchJson = async (url) => {
+        const response = await fetch(`/api${url}`);
+        if (!response.ok) {
+          throw new Error(`Request failed with status ${response.status}`);
+        }
+        return response.json();
+      };
+
       const [matchResponse, recipientResponse, donationResponse] = await Promise.all([
-        api.getMatches(),
-        api.getRecipients(),
-        api.getDonations(),
+        fetchJson('/matches/'),
+        fetchJson('/shelters/'),
+        fetchJson('/donations/'),
       ]);
-      const recipients = recipientResponse.data || [];
-      const donations = donationResponse.data || [];
-      setMatches((matchResponse.data || []).map((match) => {
+
+      const recipients = Array.isArray(recipientResponse) ? recipientResponse : [];
+      const donations = Array.isArray(donationResponse) ? donationResponse : [];
+
+      setMatches((Array.isArray(matchResponse) ? matchResponse : []).map((match) => {
         const recipient = recipients.find((item) => item.id === match.shelter_id) || {};
         const donation = donations.find((item) => item.id === match.donation_id) || {};
         const score = match.final_score ?? match.compatibility_score ?? 0;
@@ -74,6 +84,7 @@ export default function MatchesPage() {
         };
       }));
     } catch (requestError) {
+      console.error('Matches load failed:', requestError);
       setError('Backend unavailable');
     } finally {
       setLoading(false);

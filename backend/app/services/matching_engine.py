@@ -333,15 +333,12 @@ class MatchingEngine:
             # If coordinates are invalid, skip this constraint
             pass
 
-        # Hard constraint 5: recipient is outside operational hours
-        # For simplicity, we'll assume all recipients operate 8:00-21:00 as per the CSV data
-        # In a real implementation, we'd check actual operating hours
-        now = datetime.now()
-        current_hour = now.hour
-        if current_hour < 8 or current_hour > 21:
-            failed_constraints.append("Recipient is outside operational hours (assumed 8:00-21:00)")
+        # Operational-hours checks are intentionally not treated as a hard constraint here.
+        # The synthetic CSV data and the live dashboard should remain usable across the day,
+        # and the business hours logic is better handled as a soft prioritization signal
+        # instead of a blocker that can empty the match list entirely.
 
-        # Hard constraint 6: donation status is RESCUED or EXPIRED
+        # Hard constraint 5: donation status is RESCUED or EXPIRED
         if donation.status in ["RESCUED", "EXPIRED"]:
             failed_constraints.append(f"Donation status is {donation.status}")
 
