@@ -49,14 +49,6 @@ export default function DashboardLayout() {
         { name: 'Analytics', path: '/analytics', icon: BarChart3 },
       ],
     },
-    {
-      title: 'System & Portals',
-      items: [
-        { name: 'Profile & Settings', path: '/profile', icon: UserCheck },
-        { name: 'Landing Page', path: '/', icon: Globe, exact: true },
-        { name: 'Login Portal', path: '/login', icon: LogIn },
-      ],
-    },
   ];
 
   // Flattened array for title lookup
