@@ -1,20 +1,29 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# FoodLink AI Frontend
 
-# Run and deploy your AI Studio app
+This is the existing React/Vite operations console for FoodLink AI. It connects to the FastAPI backend through `src/services/api.js`.
 
-This contains everything you need to run your app locally.
+## Run locally
 
-View your app in AI Studio: https://ai.studio/apps/b6fedf7b-5a01-4b32-92a8-10c5a37146ac
+```powershell
+npm install --legacy-peer-deps
+Copy-Item .env.example .env.local
+npm run dev
+```
 
-## Run Locally
+Configure `.env.local` with:
 
-**Prerequisites:**  Node.js
+```env
+VITE_API_BASE_URL=http://localhost:8000
+VITE_USE_MOCK_API=false
+```
 
+Gemini credentials are server-side only. Do not add `GEMINI_API_KEY` to frontend environment files.
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Checks
+
+```powershell
+npm run lint
+npm run build
+```
+
+For the full integration contract, see [FRONTEND_BACKEND_INTEGRATION.md](FRONTEND_BACKEND_INTEGRATION.md).

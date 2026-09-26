@@ -11,6 +11,7 @@ from app.services.matching_engine import MatchingEngine
 from app.database import get_db
 from sqlalchemy.orm import Session
 from app.models import agent_log as agent_log_model
+from app.models import shelter as shelter_model
 from app.schemas import agent_log as agent_log_schema
 
 router = APIRouter(

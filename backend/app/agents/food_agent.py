@@ -260,10 +260,9 @@ class FoodAgent:
         if any(x in category_lower for x in ["prepared", "cooked", "meal", "leftover", "catered"]):
             recipients.extend(["homeless_shelter", "soup_kitchen", "senior_center"])
 
-        # Dairy and proteins need refrigeration
+        # Dairy and proteins need refrigeration - recommend facilities likely to have it
         if any(x in category_lower for x in ["dairy", "milk", "cheese", "yogurt", "meat", "fish", "egg"]):
-            if "refrigerated" in storage_condition.lower():
-                recipients.extend(["food_bank", "homeless_shelter"])  # Assuming they have refrigeration
+            recipients.extend(["food_bank", "homeless_shelter"])
 
         # Diet-specific recommendations
         if diet_lower in ["vegan", "vegetarian"]:

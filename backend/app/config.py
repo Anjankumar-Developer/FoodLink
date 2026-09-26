@@ -4,17 +4,18 @@ from pydantic import BaseSettings
 
 
 class Settings(BaseSettings):
-    DATABASE_URL: str
-    SECRET_KEY: str
-    ALGORITHM: str
-    ACCESS_TOKEN_EXPIRE_MINUTES: int
-    PROJECT_NAME: str
-    VERSION: str
+    DATABASE_URL: str = "sqlite:///./foodlink.db"
+    SECRET_KEY: str = "your-secret-key-here"
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    PROJECT_NAME: str = "FoodLink API"
+    VERSION: str = "1.0.0"
     GEMINI_API_KEY: Optional[str] = None
 
     class Config:
-        env_file = ".env"
+        env_file = (".env", "backend/.env")
         env_file_encoding = "utf-8"
+        extra = "ignore"
 
 
 settings = Settings()

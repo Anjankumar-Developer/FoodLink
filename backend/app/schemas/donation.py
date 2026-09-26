@@ -6,6 +6,7 @@ class DonationBase(BaseModel):
     restaurant_id: int
     food_name: str
     food_category: str
+    description: Optional[str] = None
     quantity: str
     diet_type: Optional[str] = None
     prepared_at: datetime

@@ -246,7 +246,7 @@ class CoordinatorAgent:
                 food_urgency = food_analysis.get("urgency", "LOW")
                 if food_urgency == "CRITICAL" and pickup_feasible:
                     priority = "CRITICAL"
-                elif food_urgency in ["HIGH", "CRITICAL"] or estimated_minutes < 30:
+                elif food_urgency in ["HIGH", "CRITICAL"] or route_info.get("estimated_minutes", 0) < 30:
                     priority = "HIGH"
                 elif food_urgency == "MEDIUM":
                     priority = "MEDIUM"

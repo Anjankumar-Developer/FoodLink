@@ -9,6 +9,7 @@ class Donation(Base):
     restaurant_id = Column(Integer, ForeignKey("restaurants.id"))
     food_name = Column(String)
     food_category = Column(String)
+    description = Column(String, nullable=True)
     quantity = Column(String)  # Could be a numeric value, but we'll store as string for flexibility
     diet_type = Column(String)
     prepared_at = Column(DateTime(timezone=True))

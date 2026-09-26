@@ -1424,3 +1424,387 @@ INFO:     Waiting for application startup.
 INFO:uvicorn.error:Waiting for application startup.
 INFO:     Application startup complete.
 INFO:uvicorn.error:Application startup complete.
+WARNING:  StatReload detected file change in 'app\routes\agent.py'. Reloading...
+Process SpawnProcess-99:
+Traceback (most recent call last):
+  File "C:\Users\tsanj\anaconda3\Lib\multiprocessing\process.py", line 313, in _bootstrap
+    self.run()
+    ~~~~~~~~^^
+  File "C:\Users\tsanj\anaconda3\Lib\multiprocessing\process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tsanj\anaconda3\Lib\site-packages\uvicorn\subprocess.py", line 76, in subprocess_started
+    target(sockets=sockets)
+    ~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\tsanj\anaconda3\Lib\site-packages\uvicorn\server.py", line 68, in run
+    return asyncio.run(self.serve(sockets=sockets))
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tsanj\anaconda3\Lib\asyncio\runners.py", line 195, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "C:\Users\tsanj\anaconda3\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\tsanj\anaconda3\Lib\asyncio\base_events.py", line 725, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "C:\Users\tsanj\anaconda3\Lib\site-packages\uvicorn\server.py", line 76, in serve
+    config.load()
+    ~~~~~~~~~~~^^
+  File "C:\Users\tsanj\anaconda3\Lib\site-packages\uvicorn\config.py", line 448, in load
+    self.loaded_app = import_from_string(self.app)
+                      ~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\tsanj\anaconda3\Lib\site-packages\uvicorn\importer.py", line 21, in import_from_string
+    module = importlib.import_module(module_str)
+  File "C:\Users\tsanj\anaconda3\Lib\importlib\__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1027, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "D:\Projects\FoodLink\backend\app\main.py", line 9, in <module>
+    from scripts.init_db import init_db
+  File "D:\Projects\FoodLink\backend\scripts\init_db.py", line 2, in <module>
+    from app.database import Base
+  File "D:\Projects\FoodLink\backend\app\database.py", line 5, in <module>
+    from .config import settings
+  File "D:\Projects\FoodLink\backend\app\config.py", line 20, in <module>
+    settings = Settings()
+  File "pydantic/env_settings.py", line 40, in pydantic.env_settings.BaseSettings.__init__
+  File "pydantic/main.py", line 364, in pydantic.main.BaseModel.__init__
+pydantic.error_wrappers.ValidationError: 6 validation errors for Settings
+DATABASE_URL
+  field required (type=value_error.missing)
+SECRET_KEY
+  field required (type=value_error.missing)
+ALGORITHM
+  field required (type=value_error.missing)
+ACCESS_TOKEN_EXPIRE_MINUTES
+  field required (type=value_error.missing)
+PROJECT_NAME
+  field required (type=value_error.missing)
+VERSION
+  field required (type=value_error.missing)
+WARNING:  StatReload detected file change in 'app\agents\coordinator_agent.py'. Reloading...
+Process SpawnProcess-100:
+Traceback (most recent call last):
+  File "C:\Users\tsanj\anaconda3\Lib\multiprocessing\process.py", line 313, in _bootstrap
+    self.run()
+    ~~~~~~~~^^
+  File "C:\Users\tsanj\anaconda3\Lib\multiprocessing\process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tsanj\anaconda3\Lib\site-packages\uvicorn\subprocess.py", line 76, in subprocess_started
+    target(sockets=sockets)
+    ~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\tsanj\anaconda3\Lib\site-packages\uvicorn\server.py", line 68, in run
+    return asyncio.run(self.serve(sockets=sockets))
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tsanj\anaconda3\Lib\asyncio\runners.py", line 195, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "C:\Users\tsanj\anaconda3\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\tsanj\anaconda3\Lib\asyncio\base_events.py", line 725, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "C:\Users\tsanj\anaconda3\Lib\site-packages\uvicorn\server.py", line 76, in serve
+    config.load()
+    ~~~~~~~~~~~^^
+  File "C:\Users\tsanj\anaconda3\Lib\site-packages\uvicorn\config.py", line 448, in load
+    self.loaded_app = import_from_string(self.app)
+                      ~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\tsanj\anaconda3\Lib\site-packages\uvicorn\importer.py", line 21, in import_from_string
+    module = importlib.import_module(module_str)
+  File "C:\Users\tsanj\anaconda3\Lib\importlib\__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1027, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "D:\Projects\FoodLink\backend\app\main.py", line 9, in <module>
+    from scripts.init_db import init_db
+  File "D:\Projects\FoodLink\backend\scripts\init_db.py", line 2, in <module>
+    from app.database import Base
+  File "D:\Projects\FoodLink\backend\app\database.py", line 5, in <module>
+    from .config import settings
+  File "D:\Projects\FoodLink\backend\app\config.py", line 20, in <module>
+    settings = Settings()
+  File "pydantic/env_settings.py", line 40, in pydantic.env_settings.BaseSettings.__init__
+  File "pydantic/main.py", line 364, in pydantic.main.BaseModel.__init__
+pydantic.error_wrappers.ValidationError: 6 validation errors for Settings
+DATABASE_URL
+  field required (type=value_error.missing)
+SECRET_KEY
+  field required (type=value_error.missing)
+ALGORITHM
+  field required (type=value_error.missing)
+ACCESS_TOKEN_EXPIRE_MINUTES
+  field required (type=value_error.missing)
+PROJECT_NAME
+  field required (type=value_error.missing)
+VERSION
+  field required (type=value_error.missing)
+WARNING:  StatReload detected file change in 'app\agents\food_agent.py'. Reloading...
+Process SpawnProcess-101:
+Traceback (most recent call last):
+  File "C:\Users\tsanj\anaconda3\Lib\multiprocessing\process.py", line 313, in _bootstrap
+    self.run()
+    ~~~~~~~~^^
+  File "C:\Users\tsanj\anaconda3\Lib\multiprocessing\process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tsanj\anaconda3\Lib\site-packages\uvicorn\subprocess.py", line 76, in subprocess_started
+    target(sockets=sockets)
+    ~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\tsanj\anaconda3\Lib\site-packages\uvicorn\server.py", line 68, in run
+    return asyncio.run(self.serve(sockets=sockets))
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tsanj\anaconda3\Lib\asyncio\runners.py", line 195, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "C:\Users\tsanj\anaconda3\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\tsanj\anaconda3\Lib\asyncio\base_events.py", line 725, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "C:\Users\tsanj\anaconda3\Lib\site-packages\uvicorn\server.py", line 76, in serve
+    config.load()
+    ~~~~~~~~~~~^^
+  File "C:\Users\tsanj\anaconda3\Lib\site-packages\uvicorn\config.py", line 448, in load
+    self.loaded_app = import_from_string(self.app)
+                      ~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\tsanj\anaconda3\Lib\site-packages\uvicorn\importer.py", line 21, in import_from_string
+    module = importlib.import_module(module_str)
+  File "C:\Users\tsanj\anaconda3\Lib\importlib\__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1027, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "D:\Projects\FoodLink\backend\app\main.py", line 9, in <module>
+    from scripts.init_db import init_db
+  File "D:\Projects\FoodLink\backend\scripts\init_db.py", line 2, in <module>
+    from app.database import Base
+  File "D:\Projects\FoodLink\backend\app\database.py", line 5, in <module>
+    from .config import settings
+  File "D:\Projects\FoodLink\backend\app\config.py", line 20, in <module>
+    settings = Settings()
+  File "pydantic/env_settings.py", line 40, in pydantic.env_settings.BaseSettings.__init__
+  File "pydantic/main.py", line 364, in pydantic.main.BaseModel.__init__
+pydantic.error_wrappers.ValidationError: 6 validation errors for Settings
+DATABASE_URL
+  field required (type=value_error.missing)
+SECRET_KEY
+  field required (type=value_error.missing)
+ALGORITHM
+  field required (type=value_error.missing)
+ACCESS_TOKEN_EXPIRE_MINUTES
+  field required (type=value_error.missing)
+PROJECT_NAME
+  field required (type=value_error.missing)
+VERSION
+  field required (type=value_error.missing)
+WARNING:  StatReload detected file change in 'app\models\donation.py'. Reloading...
+Process SpawnProcess-102:
+Traceback (most recent call last):
+  File "C:\Users\tsanj\anaconda3\Lib\multiprocessing\process.py", line 313, in _bootstrap
+    self.run()
+    ~~~~~~~~^^
+  File "C:\Users\tsanj\anaconda3\Lib\multiprocessing\process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tsanj\anaconda3\Lib\site-packages\uvicorn\subprocess.py", line 76, in subprocess_started
+    target(sockets=sockets)
+    ~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\tsanj\anaconda3\Lib\site-packages\uvicorn\server.py", line 68, in run
+    return asyncio.run(self.serve(sockets=sockets))
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tsanj\anaconda3\Lib\asyncio\runners.py", line 195, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "C:\Users\tsanj\anaconda3\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\tsanj\anaconda3\Lib\asyncio\base_events.py", line 725, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "C:\Users\tsanj\anaconda3\Lib\site-packages\uvicorn\server.py", line 76, in serve
+    config.load()
+    ~~~~~~~~~~~^^
+  File "C:\Users\tsanj\anaconda3\Lib\site-packages\uvicorn\config.py", line 448, in load
+    self.loaded_app = import_from_string(self.app)
+                      ~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\tsanj\anaconda3\Lib\site-packages\uvicorn\importer.py", line 21, in import_from_string
+    module = importlib.import_module(module_str)
+  File "C:\Users\tsanj\anaconda3\Lib\importlib\__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1027, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "D:\Projects\FoodLink\backend\app\main.py", line 9, in <module>
+    from scripts.init_db import init_db
+  File "D:\Projects\FoodLink\backend\scripts\init_db.py", line 2, in <module>
+    from app.database import Base
+  File "D:\Projects\FoodLink\backend\app\database.py", line 5, in <module>
+    from .config import settings
+  File "D:\Projects\FoodLink\backend\app\config.py", line 20, in <module>
+    settings = Settings()
+  File "pydantic/env_settings.py", line 40, in pydantic.env_settings.BaseSettings.__init__
+  File "pydantic/main.py", line 364, in pydantic.main.BaseModel.__init__
+pydantic.error_wrappers.ValidationError: 6 validation errors for Settings
+DATABASE_URL
+  field required (type=value_error.missing)
+SECRET_KEY
+  field required (type=value_error.missing)
+ALGORITHM
+  field required (type=value_error.missing)
+ACCESS_TOKEN_EXPIRE_MINUTES
+  field required (type=value_error.missing)
+PROJECT_NAME
+  field required (type=value_error.missing)
+VERSION
+  field required (type=value_error.missing)
+WARNING:  StatReload detected file change in 'app\schemas\donation.py'. Reloading...
+Process SpawnProcess-103:
+Traceback (most recent call last):
+  File "C:\Users\tsanj\anaconda3\Lib\multiprocessing\process.py", line 313, in _bootstrap
+    self.run()
+    ~~~~~~~~^^
+  File "C:\Users\tsanj\anaconda3\Lib\multiprocessing\process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tsanj\anaconda3\Lib\site-packages\uvicorn\subprocess.py", line 76, in subprocess_started
+    target(sockets=sockets)
+    ~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\tsanj\anaconda3\Lib\site-packages\uvicorn\server.py", line 68, in run
+    return asyncio.run(self.serve(sockets=sockets))
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tsanj\anaconda3\Lib\asyncio\runners.py", line 195, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "C:\Users\tsanj\anaconda3\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\tsanj\anaconda3\Lib\asyncio\base_events.py", line 725, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "C:\Users\tsanj\anaconda3\Lib\site-packages\uvicorn\server.py", line 76, in serve
+    config.load()
+    ~~~~~~~~~~~^^
+  File "C:\Users\tsanj\anaconda3\Lib\site-packages\uvicorn\config.py", line 448, in load
+    self.loaded_app = import_from_string(self.app)
+                      ~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\tsanj\anaconda3\Lib\site-packages\uvicorn\importer.py", line 21, in import_from_string
+    module = importlib.import_module(module_str)
+  File "C:\Users\tsanj\anaconda3\Lib\importlib\__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1027, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "D:\Projects\FoodLink\backend\app\main.py", line 9, in <module>
+    from scripts.init_db import init_db
+  File "D:\Projects\FoodLink\backend\scripts\init_db.py", line 2, in <module>
+    from app.database import Base
+  File "D:\Projects\FoodLink\backend\app\database.py", line 5, in <module>
+    from .config import settings
+  File "D:\Projects\FoodLink\backend\app\config.py", line 20, in <module>
+    settings = Settings()
+  File "pydantic/env_settings.py", line 40, in pydantic.env_settings.BaseSettings.__init__
+  File "pydantic/main.py", line 364, in pydantic.main.BaseModel.__init__
+pydantic.error_wrappers.ValidationError: 6 validation errors for Settings
+DATABASE_URL
+  field required (type=value_error.missing)
+SECRET_KEY
+  field required (type=value_error.missing)
+ALGORITHM
+  field required (type=value_error.missing)
+ACCESS_TOKEN_EXPIRE_MINUTES
+  field required (type=value_error.missing)
+PROJECT_NAME
+  field required (type=value_error.missing)
+VERSION
+  field required (type=value_error.missing)
+WARNING:  StatReload detected file change in 'app\schemas\donation.py'. Reloading...
+Process SpawnProcess-104:
+Traceback (most recent call last):
+  File "C:\Users\tsanj\anaconda3\Lib\multiprocessing\process.py", line 313, in _bootstrap
+    self.run()
+    ~~~~~~~~^^
+  File "C:\Users\tsanj\anaconda3\Lib\multiprocessing\process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tsanj\anaconda3\Lib\site-packages\uvicorn\subprocess.py", line 76, in subprocess_started
+    target(sockets=sockets)
+    ~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\tsanj\anaconda3\Lib\site-packages\uvicorn\server.py", line 68, in run
+    return asyncio.run(self.serve(sockets=sockets))
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tsanj\anaconda3\Lib\asyncio\runners.py", line 195, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "C:\Users\tsanj\anaconda3\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\tsanj\anaconda3\Lib\asyncio\base_events.py", line 725, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "C:\Users\tsanj\anaconda3\Lib\site-packages\uvicorn\server.py", line 76, in serve
+    config.load()
+    ~~~~~~~~~~~^^
+  File "C:\Users\tsanj\anaconda3\Lib\site-packages\uvicorn\config.py", line 448, in load
+    self.loaded_app = import_from_string(self.app)
+                      ~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\tsanj\anaconda3\Lib\site-packages\uvicorn\importer.py", line 21, in import_from_string
+    module = importlib.import_module(module_str)
+  File "C:\Users\tsanj\anaconda3\Lib\importlib\__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1027, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "D:\Projects\FoodLink\backend\app\main.py", line 9, in <module>
+    from scripts.init_db import init_db
+  File "D:\Projects\FoodLink\backend\scripts\init_db.py", line 2, in <module>
+    from app.database import Base
+  File "D:\Projects\FoodLink\backend\app\database.py", line 5, in <module>
+    from .config import settings
+  File "D:\Projects\FoodLink\backend\app\config.py", line 20, in <module>
+    settings = Settings()
+  File "pydantic/env_settings.py", line 40, in pydantic.env_settings.BaseSettings.__init__
+  File "pydantic/main.py", line 364, in pydantic.main.BaseModel.__init__
+pydantic.error_wrappers.ValidationError: 6 validation errors for Settings
+DATABASE_URL
+  field required (type=value_error.missing)
+SECRET_KEY
+  field required (type=value_error.missing)
+ALGORITHM
+  field required (type=value_error.missing)
+ACCESS_TOKEN_EXPIRE_MINUTES
+  field required (type=value_error.missing)
+PROJECT_NAME
+  field required (type=value_error.missing)
+VERSION
+  field required (type=value_error.missing)
