@@ -1,3 +1,4 @@
+import os
 import sys
 from pathlib import Path
 
@@ -12,6 +13,15 @@ from .models.user import User
 from .routes import restaurant, shelter, donation, volunteer, match, pickup, agent_log, analytics, map, agent, rescue, auth
 from scripts.init_db import init_db
 
+allowed_origins = [
+    origin.strip()
+    for origin in os.getenv(
+        'CORS_ALLOWED_ORIGINS',
+        settings.CORS_ALLOWED_ORIGINS,
+    ).split(',')
+    if origin.strip()
+]
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
@@ -20,15 +30,8 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?$",
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:4173",
-        "http://127.0.0.1:4173",
-    ],
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1|.*\.onrender\.com)(:\d+)?$",
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
