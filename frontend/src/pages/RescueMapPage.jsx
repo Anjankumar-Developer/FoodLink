@@ -17,6 +17,9 @@ import Badge from '../components/common/Badge';
 import Button from '../components/common/Button';
 import GoogleMapsGroundingSearch from '../components/maps/GoogleMapsGroundingSearch';
 import { api } from '../services/api';
+import { INDIA_MAP_ENTITIES } from '../data/mockData';
+
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 const urgencyRank = { SAFE: 0, 'AT RISK': 1, URGENT: 2, CRITICAL: 3 };
 
@@ -57,13 +60,24 @@ export default function RescueMapPage() {
   });
 
   const [selectedEntity, setSelectedEntity] = useState(null);
-  const [mapEntities, setMapEntities] = useState([]);
+  const [mapEntities, setMapEntities] = useState(INDIA_MAP_ENTITIES);
   const [activeRescues, setActiveRescues] = useState([]);
   const [selectedRescue, setSelectedRescue] = useState(null);
-  const [mapLoading, setMapLoading] = useState(true);
+  const [mapLoading, setMapLoading] = useState(false);
   const [mapError, setMapError] = useState(null);
 
   useEffect(() => {
+    const useIndiaMockMap = true;
+
+    if (useIndiaMockMap) {
+      setMapEntities(INDIA_MAP_ENTITIES.map((item) => ({
+        ...item,
+        position: [item.lat, item.lng],
+      })));
+      setMapLoading(false);
+      return;
+    }
+
     api.getMapData()
       .then(({ data }) => {
         const rescues = data.rescues || [];
@@ -99,19 +113,64 @@ export default function RescueMapPage() {
       .finally(() => setMapLoading(false));
   }, []);
 
-  // Initialize Leaflet Map
+  // Initialize map view for India and optionally use Google Maps when a key is configured.
   useEffect(() => {
     if (!mapContainerRef.current) return;
-    if (mapInstanceRef.current) return; // Prevent double init
+    if (mapInstanceRef.current) return;
 
-    // San Francisco Metro Center
+    if (GOOGLE_MAPS_API_KEY) {
+      const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+      const onLoad = () => {
+        const map = new window.google.maps.Map(mapContainerRef.current, {
+          center: { lat: 22.5937, lng: 78.9629 },
+          zoom: 5,
+          mapTypeId: 'roadmap',
+          streetViewControl: false,
+        });
+
+        mapInstanceRef.current = map;
+        const bounds = new window.google.maps.LatLngBounds();
+        INDIA_MAP_ENTITIES.forEach((entity) => {
+          const position = { lat: entity.lat, lng: entity.lng };
+          bounds.extend(position);
+          new window.google.maps.Marker({
+            position,
+            map,
+            title: entity.name,
+          });
+        });
+        map.fitBounds(bounds, 36);
+      };
+
+      if (window.google?.maps) {
+        onLoad();
+        return;
+      }
+
+      if (existingScript) {
+        existingScript.addEventListener('load', onLoad, { once: true });
+      } else {
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}`;
+        script.async = true;
+        script.defer = true;
+        script.addEventListener('load', onLoad, { once: true });
+        document.head.appendChild(script);
+      }
+
+      return () => {
+        if (existingScript) {
+          existingScript.removeEventListener('load', onLoad);
+        }
+      };
+    }
+
     const map = L.map(mapContainerRef.current, {
-      center: [37.778, -122.416],
-      zoom: 13,
+      center: [22.5937, 78.9629],
+      zoom: 5,
       zoomControl: true,
     });
 
-    // CartoDB Positron clean map tiles (high reliability, clean light aesthetic)
     L.tileLayer(
       'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
       {
@@ -126,7 +185,6 @@ export default function RescueMapPage() {
 
     mapInstanceRef.current = map;
 
-    // Ensure map tiles calculate full dimensions smoothly
     const invalidateTimer = setTimeout(() => {
       map.invalidateSize();
     }, 250);
@@ -264,10 +322,10 @@ export default function RescueMapPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            Real-Time Rescue Geospatial Network
+            India Food Rescue Geospatial Network
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Live telemetry tracking of surplus food batches, verified shelters, and courier corridors.
+            Live telemetry tracking of surplus food batches, verified shelters, and courier corridors across India.
           </p>
         </div>
 

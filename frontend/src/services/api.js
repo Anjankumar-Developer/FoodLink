@@ -17,8 +17,8 @@ import {
   MAP_ENTITIES,
 } from '../data/mockData';
 
-// API Base URL from environment or default to local proxy
-const configuredApiBase = import.meta.env.VITE_API_BASE_URL || '/api';
+// API Base URL from environment or default to the FastAPI backend
+const configuredApiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 export const API_BASE_URL = configuredApiBase.replace(/\/$/, '').endsWith('/api')
   ? configuredApiBase.replace(/\/$/, '')
   : `${configuredApiBase.replace(/\/$/, '')}/api`;

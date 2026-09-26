@@ -22,7 +22,6 @@ import Button from '../components/common/Button';
 import {
   DASHBOARD_STATS,
   RECENT_DONATIONS,
-  URGENT_ALERTS,
   ACTIVE_OPERATIONS,
   AGENT_MONITOR_DATA,
 } from '../data/mockData';
@@ -33,7 +32,6 @@ import { api } from '../services/api';
 export default function DashboardPage() {
   const navigate = useNavigate();
   const { addToast } = useToast();
-  const [alerts, setAlerts] = useState(URGENT_ALERTS);
   const [recentDonations, setRecentDonations] = useState([]);
   const [liveStats, setLiveStats] = useState(DASHBOARD_STATS);
   const [backendError, setBackendError] = useState(null);
@@ -66,109 +64,45 @@ export default function DashboardPage() {
 
   useEffect(() => { loadDashboard(); }, []);
 
-  const handleDismissAlert = (id) => {
-    setAlerts((prev) => prev.filter((a) => a.id !== id));
-    addToast({
-      title: 'Alert Acknowledged',
-      message: 'Dispatch routing updated.',
-      type: 'info',
-    });
-  };
-
   return (
     <div className="space-y-8">
       {backendError && <div className="p-3 rounded-lg border border-red-200 bg-red-50 text-sm text-red-700 flex justify-between"><span>{backendError}</span><button type="button" onClick={loadDashboard} className="font-semibold underline">Retry</button></div>}
       {/* 1. Header Banner & Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
+          <div className="mb-2 flex items-center gap-2">
+            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-700">
+              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+              Live Ops
+            </span>
+          </div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            Logistics Command Center
+            Food Rescue Command Center
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Real-time multi-agent food rescue coordination across SF Bay Area Metro.
+            Real-time coordination across India’s high-priority food rescue hubs.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 self-start sm:self-auto">
           <Button
-            onClick={() => navigate('/map')}
             variant="secondary"
             size="sm"
-            icon={MapPin}
+            onClick={() => navigate('/analytics')}
           >
-            Live Map
+            View analytics
           </Button>
           <Button
-            onClick={() => navigate('/donations/new')}
             variant="primary"
             size="sm"
-            icon={UtensilsCrossed}
+            onClick={() => navigate('/map')}
           >
-            Log Surplus
+            Open map
           </Button>
         </div>
       </div>
 
-      {/* 2. Urgent Rescue Alerts Banner (if any) */}
-      {alerts.length > 0 && (
-        <div className="space-y-3">
-          {alerts.map((alert) => (
-            <div
-              key={alert.id}
-              className={`p-4 rounded-xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${
-                alert.severity === 'critical'
-                  ? 'bg-red-50/70 border-red-200 text-red-900'
-                  : alert.severity === 'warning'
-                  ? 'bg-amber-50/70 border-amber-200 text-amber-900'
-                  : 'bg-blue-50/70 border-blue-200 text-blue-900'
-              }`}
-            >
-              <div className="flex items-start gap-3">
-                {alert.severity === 'critical' ? (
-                  <ShieldAlert className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-                ) : (
-                  <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                )}
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold uppercase tracking-wider">
-                      {alert.severity} Alert
-                    </span>
-                    <span className="text-xs text-slate-400">·</span>
-                    <span className="text-xs text-slate-500 font-mono">{alert.timestamp}</span>
-                  </div>
-                  <h4 className="text-sm font-semibold mt-0.5">{alert.title}</h4>
-                  <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">{alert.description}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
-                <Button
-                  onClick={() => {
-                    if (alert.donationId) {
-                      navigate(`/matches`);
-                    } else {
-                      navigate(`/shelters`);
-                    }
-                  }}
-                  variant={alert.severity === 'critical' ? 'danger' : 'primary'}
-                  size="sm"
-                >
-                  {alert.actionRequired}
-                </Button>
-                <button
-                  onClick={() => handleDismissAlert(alert.id)}
-                  className="text-xs text-slate-400 hover:text-slate-600 px-2 py-1 rounded"
-                >
-                  Dismiss
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* 3. Primary KPI Metric Cards (6 core metrics) */}
+      {/* 2. Primary KPI Metric Cards (6 core metrics) */}
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <StatCard
           title="Meals Rescued"
@@ -393,8 +327,8 @@ export default function DashboardPage() {
 
           {/* Interactive Map Preview Card */}
           <Card
-            title="Network Topology"
-            subtitle="Current rescue fleet & donor nodes"
+            title="Network View"
+            subtitle="Metro hubs and active recovery routes"
             action={
               <Button
                 onClick={() => navigate('/map')}
@@ -410,23 +344,22 @@ export default function DashboardPage() {
               onClick={() => navigate('/map')}
               className="relative h-48 rounded-lg overflow-hidden border border-slate-200 cursor-pointer group bg-slate-100 flex items-center justify-center"
             >
-              {/* Visual Map Backdrop Mock Graphic */}
               <div className="absolute inset-0 bg-gradient-to-br from-slate-100 via-slate-50 to-emerald-50/40 p-4 flex flex-col justify-between">
                 <div className="flex justify-between items-start">
-                  <div className="bg-white/90 backdrop-blur-xs px-2 py-1 rounded text-[11px] font-medium text-slate-700 border border-slate-200">
-                    4 Active Hubs · 2 Routes Live
+                  <div className="bg-white/90 px-2 py-1 rounded text-[11px] font-medium text-slate-700 border border-slate-200">
+                    5 Active Hubs · 3 Live Routes
                   </div>
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
                 </div>
 
                 <div className="space-y-1 text-center">
-                  <p className="text-xs font-bold text-slate-800">Launch Interactive Leaflet View</p>
-                  <p className="text-[11px] text-slate-500">View real-time coordinates of shelters, volunteers & donors</p>
+                  <p className="text-xs font-bold text-slate-800">India rescue network</p>
+                  <p className="text-[11px] text-slate-500">Donors, shelters, and volunteer routes in one view</p>
                 </div>
 
                 <div className="flex justify-between text-[10px] text-slate-500 font-mono">
-                  <span>LAT: 37.7749° N</span>
-                  <span>LNG: -122.4194° W</span>
+                  <span>DEL • MUM • BLR</span>
+                  <span>22.6°N · 78.9°E</span>
                 </div>
               </div>
             </div>

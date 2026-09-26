@@ -1,98 +1,125 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, Mail, Lock, ArrowRight, CheckCircle2, User } from 'lucide-react';
+import { ShieldCheck, Mail, Lock, ArrowRight, User, Sparkles } from 'lucide-react';
 import Button from '../components/common/Button';
 import Card from '../components/common/Card';
 import { useToast } from '../components/common/Toast';
+import api from '../services/api';
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const { addToast } = useToast();
-  const [role, setRole] = useState('coordinator'); // 'kitchen' | 'shelter' | 'volunteer' | 'coordinator'
-  const [email, setEmail] = useState('elena.rostova@foodlink.ai');
-  const [password, setPassword] = useState('••••••••••••');
+  const [isSignup, setIsSignup] = useState(false);
+  const [name, setName] = useState('Aisha Khan');
+  const [email, setEmail] = useState('aisha@example.com');
+  const [password, setPassword] = useState('securepass123');
+  const [role, setRole] = useState('coordinator');
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e) => {
+  const submitLabel = useMemo(() => (isSignup ? 'Create Account' : 'Sign In to Console'), [isSignup]);
+
+  const saveSession = (user, token) => {
+    localStorage.setItem('foodlink_user', JSON.stringify(user));
+    localStorage.setItem('foodlink_token', token);
+    api.setAuthToken(token);
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const payload = isSignup
+        ? { name, email, password, role, organization: 'FoodLink Network' }
+        : { email, password };
+
+      const endpoint = isSignup ? '/auth/signup' : '/auth/login';
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.detail || 'Authentication failed.');
+      }
+
+      saveSession(result.user, result.token);
       addToast({
-        title: 'Authentication Successful',
-        message: `Welcome back, Elena Rostova (${role.toUpperCase()} Console).`,
+        title: isSignup ? 'Account created successfully' : 'Authentication successful',
+        message: `Welcome${isSignup ? ' aboard' : ' back'}, ${result.user.name}.`,
         type: 'success',
       });
       navigate('/dashboard');
-    }, 600);
-  };
-
-  const handleRoleSelect = (selectedRole, defaultEmail) => {
-    setRole(selectedRole);
-    setEmail(defaultEmail);
+    } catch (error) {
+      addToast({
+        title: 'Authentication failed',
+        message: error.message,
+        type: 'error',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="min-h-[85vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-6">
-        {/* Brand Lockup */}
         <div className="text-center space-y-2">
           <div className="w-12 h-12 rounded-xl bg-emerald-600 text-white font-bold text-xl flex items-center justify-center mx-auto shadow-xs">
             F
           </div>
           <h2 className="text-2xl font-bold tracking-tight text-slate-900">
-            Sign in to FOODLINK AI
+            {isSignup ? 'Create your FOODLINK account' : 'Sign in to FOODLINK AI'}
           </h2>
           <p className="text-xs text-slate-500">
-            Enter your organization credentials or choose a pre-configured demo portal.
+            {isSignup ? 'Set up your secure portal for food rescue operations.' : 'Access your food rescue workspace and role-based dashboard.'}
           </p>
         </div>
 
-        {/* Role Segmented Selector */}
-        <div className="bg-slate-100 p-1 rounded-lg grid grid-cols-3 gap-1 text-xs font-medium">
+        <div className="bg-slate-100 p-1 rounded-lg grid grid-cols-2 gap-1 text-xs font-medium">
           <button
             type="button"
-            onClick={() => handleRoleSelect('coordinator', 'elena.rostova@foodlink.ai')}
+            onClick={() => setIsSignup(false)}
             className={`py-2 px-2 rounded-md transition-colors ${
-              role === 'coordinator'
-                ? 'bg-white text-slate-900 shadow-xs font-semibold'
-                : 'text-slate-600 hover:text-slate-900'
+              !isSignup ? 'bg-white text-slate-900 shadow-xs font-semibold' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            Coordinator
+            Login
           </button>
           <button
             type="button"
-            onClick={() => handleRoleSelect('kitchen', 'kitchen@grandbistro.com')}
+            onClick={() => setIsSignup(true)}
             className={`py-2 px-2 rounded-md transition-colors ${
-              role === 'kitchen'
-                ? 'bg-white text-slate-900 shadow-xs font-semibold'
-                : 'text-slate-600 hover:text-slate-900'
+              isSignup ? 'bg-white text-slate-900 shadow-xs font-semibold' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            Restaurant
-          </button>
-          <button
-            type="button"
-            onClick={() => handleRoleSelect('shelter', 'intake@hopeharbor.org')}
-            className={`py-2 px-2 rounded-md transition-colors ${
-              role === 'shelter'
-                ? 'bg-white text-slate-900 shadow-xs font-semibold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Shelter
+            Sign Up
           </button>
         </div>
 
-        {/* Auth Form Card */}
         <Card className="shadow-sm">
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {isSignup && (
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Full Name</label>
+                <div className="relative">
+                  <User className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                  <input
+                    type="text"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Your full name"
+                    className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-colors"
+                  />
+                </div>
+              </div>
+            )}
+
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">
-                Authorized Email Address
-              </label>
+              <label className="block text-xs font-medium text-slate-700 mb-1">Email Address</label>
               <div className="relative">
                 <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                 <input
@@ -107,25 +134,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-xs font-medium text-slate-700">
-                  Password
-                </label>
-                <a
-                  href="#forgot"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    addToast({
-                      title: 'Reset instructions sent',
-                      message: 'Check your email for reset instructions.',
-                      type: 'info',
-                    });
-                  }}
-                  className="text-xs text-emerald-700 hover:underline"
-                >
-                  Forgot password?
-                </a>
-              </div>
+              <label className="block text-xs font-medium text-slate-700 mb-1">Password</label>
               <div className="relative">
                 <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                 <input
@@ -139,17 +148,21 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 pt-1">
-              <input
-                id="remember"
-                type="checkbox"
-                defaultChecked
-                className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-              />
-              <label htmlFor="remember" className="text-xs text-slate-600 select-none">
-                Remember this terminal session for 30 days
-              </label>
-            </div>
+            {isSignup && (
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Role</label>
+                <select
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-colors"
+                >
+                  <option value="coordinator">Coordinator</option>
+                  <option value="restaurant">Restaurant</option>
+                  <option value="shelter">Shelter</option>
+                  <option value="volunteer">Volunteer</option>
+                </select>
+              </div>
+            )}
 
             <Button
               type="submit"
@@ -159,30 +172,28 @@ export default function LoginPage() {
               className="w-full justify-center"
               icon={ArrowRight}
             >
-              {loading ? 'Authenticating...' : 'Sign In to Console'}
+              {loading ? 'Processing...' : submitLabel}
             </Button>
           </form>
 
-          {/* Verification Badge */}
           <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-center gap-2 text-xs text-slate-500">
             <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>256-Bit SSL Encrypted Logistics Channel</span>
+            <span>Secure, role-aware access for your rescue operations</span>
           </div>
         </Card>
 
-        {/* Quick Demo Access Bar */}
         <div className="text-center">
           <button
             type="button"
             onClick={() => {
-              setEmail('elena.rostova@foodlink.ai');
-              setRole('coordinator');
-              navigate('/dashboard');
+              setIsSignup(false);
+              setEmail('aisha@example.com');
+              setPassword('securepass123');
             }}
             className="text-xs text-slate-500 hover:text-emerald-700 font-medium inline-flex items-center gap-1.5 transition-colors"
           >
-            <span>Skip to Live Console as Elena Rostova (Lead Coordinator)</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Use demo credentials</span>
           </button>
         </div>
       </div>

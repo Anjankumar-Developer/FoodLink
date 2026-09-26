@@ -6,15 +6,18 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from scripts.init_db import init_db
 
 from .config import settings
-from .routes import restaurant, shelter, donation, volunteer, match, pickup, agent_log, analytics, map, agent, rescue
+from .models.user import User
+from .routes import restaurant, shelter, donation, volunteer, match, pickup, agent_log, analytics, map, agent, rescue, auth
+from scripts.init_db import init_db
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
 )
+
+init_db()
 
 # CORS middleware
 app.add_middleware(
@@ -39,6 +42,7 @@ def health_check():
     return {"status": "ok"}
 
 # Include routers
+app.include_router(auth.router)
 app.include_router(restaurant.router, tags=["restaurants"])
 app.include_router(shelter.router, tags=["shelters"])
 app.include_router(donation.router, tags=["donations"])
