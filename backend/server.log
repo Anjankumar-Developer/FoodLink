@@ -1417,3 +1417,10 @@ INFO:     Waiting for application startup.
 INFO:uvicorn.error:Waiting for application startup.
 INFO:     Application startup complete.
 INFO:uvicorn.error:Application startup complete.
+WARNING:  StatReload detected file change in 'test_rescue_workflow.py'. Reloading...
+INFO:     Started server process [22960]
+INFO:uvicorn.error:Started server process [22960]
+INFO:     Waiting for application startup.
+INFO:uvicorn.error:Waiting for application startup.
+INFO:     Application startup complete.
+INFO:uvicorn.error:Application startup complete.
