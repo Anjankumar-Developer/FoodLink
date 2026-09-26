@@ -1,0 +1,6 @@
+{
+  "name": "FOODLINK AI",
+  "description": "AI-powered food rescue coordination platform connecting surplus food with verified shelters.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
