@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Plus,
@@ -19,17 +19,47 @@ import Button from '../components/common/Button';
 import Modal from '../components/common/Modal';
 import { RECENT_DONATIONS } from '../data/mockData';
 import { useToast } from '../components/common/Toast';
+import { api } from '../services/api';
 
 export default function DonationsPage() {
   const navigate = useNavigate();
   const { addToast } = useToast();
+  const [donations, setDonations] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedDonation, setSelectedDonation] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
+  const loadDonations = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await api.getDonations();
+      setDonations(response.data || []);
+    } catch (requestError) {
+      setError('Backend unavailable');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { loadDonations(); }, []);
+
   const filteredDonations = useMemo(() => {
-    return RECENT_DONATIONS.filter((item) => {
+    return donations.map((item) => ({
+      ...item,
+      restaurant: item.restaurant?.name || item.restaurant_name || `Restaurant #${item.restaurant_id}`,
+      foodName: item.foodName || item.food_name,
+      category: item.category || item.food_category,
+      dietType: item.dietType || item.diet_type || 'Not specified',
+      preparedTime: item.preparedTime || item.prepared_at,
+      expiryTime: item.expiryTime || item.expires_at,
+      expiryHours: item.expiryHours || Math.max(0, (new Date(item.expires_at) - Date.now()) / 3600000),
+      storageCondition: item.storageCondition || item.storage_condition || 'Not specified',
+      matchedShelter: item.matchedShelter || null,
+    })).filter((item) => {
       const matchesSearch =
         item.restaurant.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.foodName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -204,7 +234,19 @@ export default function DonationsPage() {
         </div>
       </Card>
 
+      {error && (
+        <Card bodyClassName="p-4">
+          <div className="flex items-center justify-between gap-4 text-sm text-red-700">
+            <span>{error}</span>
+            <Button onClick={loadDonations} variant="secondary" size="sm">Retry</Button>
+          </div>
+        </Card>
+      )}
+
+      {loading && <Card bodyClassName="p-8 text-center text-sm text-slate-500">Loading donations...</Card>}
+
       {/* Main Donations Table */}
+      {!loading && (
       <Card bodyClassName="p-0">
         <Table
           columns={tableColumns}
@@ -213,6 +255,7 @@ export default function DonationsPage() {
           emptyMessage="No food donations found matching your search criteria."
         />
       </Card>
+      )}
 
       {/* Donation Detail Modal */}
       <Modal

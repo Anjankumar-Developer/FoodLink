@@ -1,206 +1,252 @@
-You are the senior backend engineer for FOODLINK AI.
+Now integrate the EXISTING FOODLINK frontend with the existing backend.
 
-Build the production-structured but hackathon-fast backend.
+IMPORTANT:
 
-PROJECT
+The frontend already exists in:
 
-FOODLINK AI connects restaurant surplus food with verified shelters and coordinates rescue operations before food expires.
+frontend/
 
-TECH STACK
+DO NOT rebuild it.
 
-Python 3.11+
-FastAPI
-Pydantic
-SQLAlchemy
-PostgreSQL
-Supabase PostgreSQL
-Uvicorn
-python-dotenv
-httpx
+DO NOT replace the UI.
 
-DO NOT:
-- use microservices
-- use Kafka
-- use Redis
-- use Celery
-- use Kubernetes
-- over-engineer authentication
-- create unnecessary infrastructure
+DO NOT create a new React project.
 
-PROJECT STRUCTURE
+DO NOT change the visual design unless required to fix an integration issue.
 
-backend/
-├── app/
-│   ├── main.py
-│   ├── config.py
-│   ├── database.py
-│   ├── models/
-│   ├── schemas/
-│   ├── routes/
-│   ├── services/
-│   ├── agents/
-│   └── utils/
-├── scripts/
-├── requirements.txt
-├── .env.example
-└── README.md
+Inspect the existing frontend first.
 
-DATABASE MODELS
+==================================================
+STEP 1: FRONTEND AUDIT
+==================================================
 
-users:
-id
-name
-email
-role
-created_at
+Inspect:
 
-restaurants:
-id
-name
-address
-latitude
-longitude
-rating
-price_level
-cuisine
-food_categories
-verified
-created_at
+frontend/src/
 
-shelters:
-id
-name
-address
-latitude
-longitude
-capacity
-current_demand
-accepted_food_types
-verified
-created_at
+Identify:
 
-donations:
-id
-restaurant_id
-food_name
-food_category
-quantity
-diet_type
-prepared_at
-expires_at
-storage_condition
-status
-created_at
+- routes
+- pages
+- components
+- services
+- API calls
+- state management
+- demo data
+- map components
+- charts
+- loading states
+- error states
 
-matches:
-id
-donation_id
-shelter_id
-distance_km
-travel_minutes
-compatibility_score
-urgency_score
-capacity_score
-pickup_score
-demand_score
-final_score
-status
-explanation
-created_at
+Find whether an API service already exists.
 
-volunteers:
-id
-name
-vehicle_type
-availability
-latitude
-longitude
-created_at
+If it exists, extend it.
 
-pickups:
-id
-match_id
-volunteer_id
-pickup_time
-delivery_time
-status
-pickup_qr
-delivery_qr
-created_at
+If not, create:
 
-agent_logs:
-id
-donation_id
-agent_name
-action
-reasoning
-status
-created_at
+frontend/src/services/api.js
 
-CREATE CRUD APIs.
+==================================================
+STEP 2: API CONTRACT
+==================================================
 
-Restaurants:
+Connect the frontend to:
+
 GET /api/restaurants
 GET /api/restaurants/{id}
 
-Shelters:
-GET /api/shelters
-GET /api/shelters/{id}
-POST /api/shelters
-PUT /api/shelters/{id}
+GET /api/recipients
+GET /api/recipients/{id}
 
-Donations:
+GET /api/volunteers
+
 GET /api/donations
 GET /api/donations/{id}
 POST /api/donations
-PUT /api/donations/{id}
 
-Volunteers:
-GET /api/volunteers
-GET /api/volunteers/{id}
-
-Matches:
 GET /api/matches/donation/{donation_id}
 POST /api/matches/generate/{donation_id}
-POST /api/matches/{match_id}/accept
-POST /api/matches/{match_id}/reject
 
-Analytics:
-GET /api/analytics/overview
-GET /api/analytics/impact
-
-Maps:
-GET /api/map/restaurants
-GET /api/map/shelters
-GET /api/map/active-rescues
-
-Agents:
 POST /api/agents/analyze-food
-POST /api/agents/find-shelters
+POST /api/agents/find-recipients
 POST /api/agents/calculate-route
 POST /api/agents/coordinate
+POST /api/agents/rescue/{donation_id}
 
-System:
-GET /health
+==================================================
+STEP 3: DEMO DATA
+==================================================
 
-Implement:
-- SQLAlchemy models
-- Pydantic schemas
-- database session management
-- environment variables
-- CORS
-- proper HTTP status codes
-- validation
+The existing frontend may contain demoData.
+
+Do NOT delete it immediately.
+
+Use it only as explicit fallback/demo mode.
+
+Production mode must use backend APIs.
+
+Never silently replace failed API responses with fake data.
+
+If backend is unavailable, show:
+
+"Backend unavailable"
+
+and provide an obvious demo-mode state if one already exists.
+
+==================================================
+STEP 4: ENVIRONMENT
+==================================================
+
+Configure frontend environment:
+
+VITE_API_BASE_URL
+
+Example:
+
+VITE_API_BASE_URL=http://localhost:8000
+
+Never put:
+
+GEMINI_API_KEY
+
+in frontend environment variables.
+
+==================================================
+STEP 5: CONNECT THESE SCREENS
+==================================================
+
+Dashboard:
+
+- KPI data
+- donations
+- active rescues
+- match statistics
+- recipient statistics
+
+Donations:
+
+- list donations
+- status
+- expiry
+- quantity
+- restaurant
+
+Donation Detail:
+
+- donation information
+- expiry countdown
+- AI analysis
+- recommended matches
+
+Matches:
+
+- candidate recipients
+- score
+- score breakdown
+- distance
+- ETA
+- compatibility
+- urgency
+- capacity
+
+AI Agents:
+
+Display:
+
+Food Agent
+Recipient Agent
+Route Agent
+Coordinator Agent
+
+Show:
+
+status
+execution
+reasoning
+timestamp
+
+Live Map:
+
+Use backend coordinates.
+
+Display:
+
+restaurants
+recipients
+volunteers
+active rescues
+
+Analytics:
+
+Use backend data.
+
+==================================================
+STEP 6: ERROR STATES
+==================================================
+
+Every API page needs:
+
+loading state
+empty state
+error state
+retry action
+
+Do not leave blank screens.
+
+==================================================
+STEP 7: CORS
+==================================================
+
+Fix backend CORS for local development.
+
+Allow frontend origin.
+
+Do not use unrestricted production CORS unless explicitly required.
+
+==================================================
+STEP 8: END-TO-END TEST
+==================================================
+
+Perform this exact flow:
+
+1. Open dashboard
+2. Load restaurants
+3. Load recipients
+4. Create donation
+5. Generate matches
+6. Run multi-agent analysis
+7. Display recommended recipient
+8. Display score breakdown
+9. Display route
+10. Display map
+11. Continue to rescue workflow
+
+Fix every API mismatch.
+
+==================================================
+DELIVERABLE
+==================================================
+
+Create:
+
+FRONTEND_BACKEND_INTEGRATION.md
+
+Include:
+
+- endpoint
+- method
+- request body
+- response
+- frontend screen using it
+- authentication requirement
 - error handling
 
-Do not implement Gemini logic yet.
+Then run:
 
-Create database initialization/migration-friendly logic.
+frontend build
+backend tests
+API integration tests
 
-Create .env.example.
+Fix all errors.
 
-Run the backend.
-
-Test every endpoint.
-
-Fix all Python errors, import errors, database errors and CORS errors before finishing.
+Do not redesign the frontend.

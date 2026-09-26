@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   UtensilsCrossed,
@@ -28,11 +28,43 @@ import {
 } from '../data/mockData';
 import { formatNumber } from '../utils/formatters';
 import { useToast } from '../components/common/Toast';
+import { api } from '../services/api';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
   const { addToast } = useToast();
   const [alerts, setAlerts] = useState(URGENT_ALERTS);
+  const [recentDonations, setRecentDonations] = useState([]);
+  const [liveStats, setLiveStats] = useState(DASHBOARD_STATS);
+  const [backendError, setBackendError] = useState(null);
+
+  const loadDashboard = async () => {
+    try {
+      const [donationsResponse, matchesResponse, volunteersResponse] = await Promise.all([
+        api.getDonations(),
+        api.getMatches(),
+        api.getVolunteers(),
+      ]);
+      const donations = donationsResponse.data || [];
+      setRecentDonations(donations.slice(0, 4).map((item) => ({
+        ...item,
+        restaurant: item.restaurant?.name || `Restaurant #${item.restaurant_id}`,
+        foodName: item.food_name,
+        expiryTime: item.expires_at,
+      })));
+      setLiveStats((previous) => ({
+        ...previous,
+        activeDonations: donations.filter((item) => item.status !== 'completed').length,
+        atRiskDonations: donations.filter((item) => item.expires_at && new Date(item.expires_at) - Date.now() < 7200000).length,
+        successfulMatches: (matchesResponse.data || []).filter((item) => item.status === 'completed').length,
+        activeVolunteers: (volunteersResponse.data || []).filter((item) => item.availability !== 'off_duty').length,
+      }));
+    } catch (requestError) {
+      setBackendError('Backend unavailable');
+    }
+  };
+
+  useEffect(() => { loadDashboard(); }, []);
 
   const handleDismissAlert = (id) => {
     setAlerts((prev) => prev.filter((a) => a.id !== id));
@@ -45,6 +77,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
+      {backendError && <div className="p-3 rounded-lg border border-red-200 bg-red-50 text-sm text-red-700 flex justify-between"><span>{backendError}</span><button type="button" onClick={loadDashboard} className="font-semibold underline">Retry</button></div>}
       {/* 1. Header Banner & Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -139,7 +172,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <StatCard
           title="Meals Rescued"
-          value={formatNumber(DASHBOARD_STATS.mealsRescued)}
+          value={formatNumber(liveStats.mealsRescued)}
           trend="+18% vs last wk"
           trendPositive={true}
           icon={UtensilsCrossed}
@@ -147,7 +180,7 @@ export default function DashboardPage() {
         />
         <StatCard
           title="Active Donations"
-          value={DASHBOARD_STATS.activeDonations}
+          value={liveStats.activeDonations}
           trend="8 awaiting pickup"
           trendPositive={true}
           icon={Clock}
@@ -155,7 +188,7 @@ export default function DashboardPage() {
         />
         <StatCard
           title="At-Risk Donations"
-          value={DASHBOARD_STATS.atRiskDonations}
+          value={liveStats.atRiskDonations}
           trend="Expiring < 2h"
           trendPositive={false}
           icon={AlertTriangle}
@@ -163,7 +196,7 @@ export default function DashboardPage() {
         />
         <StatCard
           title="Successful Matches"
-          value={formatNumber(DASHBOARD_STATS.successfulMatches)}
+          value={formatNumber(liveStats.successfulMatches)}
           trend="99.4% fulfill"
           trendPositive={true}
           icon={Sparkles}
@@ -171,7 +204,7 @@ export default function DashboardPage() {
         />
         <StatCard
           title="Food Rescued"
-          value={DASHBOARD_STATS.foodRescuedFormatted}
+          value={liveStats.foodRescuedFormatted}
           trend="24,150 kg diverted"
           trendPositive={true}
           icon={Scale}
@@ -179,7 +212,7 @@ export default function DashboardPage() {
         />
         <StatCard
           title="Avg Match Time"
-          value={`${DASHBOARD_STATS.avgMatchTimeMinutes}m`}
+          value={`${liveStats.avgMatchTimeMinutes}m`}
           trend="-1.2m vs SLA"
           trendPositive={true}
           icon={Truck}
@@ -278,7 +311,7 @@ export default function DashboardPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {RECENT_DONATIONS.slice(0, 4).map((d) => (
+                  {recentDonations.map((d) => (
                     <tr key={d.id} className="hover:bg-slate-50/70 transition-colors">
                       <td className="py-3 px-3">
                         <p className="font-semibold text-slate-900">{d.restaurant}</p>

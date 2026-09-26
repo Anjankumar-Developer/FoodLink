@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   AreaChart,
   Area,
@@ -31,10 +31,67 @@ import Button from '../components/common/Button';
 import { ANALYTICS_DATA, DASHBOARD_STATS } from '../data/mockData';
 import { formatNumber } from '../utils/formatters';
 import { useToast } from '../components/common/Toast';
+import { api } from '../services/api';
+
+const riskPriority = { CRITICAL: 0, URGENT: 1, 'AT RISK': 2, SAFE: 3 };
 
 export default function AnalyticsPage() {
   const { addToast } = useToast();
   const [timeframe, setTimeframe] = useState('6m');
+  const [overview, setOverview] = useState(null);
+  const [impact, setImpact] = useState(null);
+  const [riskDonations, setRiskDonations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const loadAnalytics = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [overviewResponse, impactResponse, donationsResponse, matchesResponse] = await Promise.all([
+        api.getAnalytics(timeframe),
+        api.getAnalyticsImpact(),
+        api.getDonations(),
+        api.getMatches(),
+      ]);
+      const matchesByDonation = (matchesResponse.data || []).reduce((result, match) => {
+        if (!result[match.donation_id] || (match.final_score || 0) > (result[match.donation_id].final_score || 0)) {
+          result[match.donation_id] = match;
+        }
+        return result;
+      }, {});
+      setOverview(overviewResponse.data);
+      setImpact(impactResponse.data);
+      setRiskDonations((donationsResponse.data || [])
+        .map((donation) => {
+          const match = matchesByDonation[donation.id];
+          const remainingMinutes = donation.expires_at
+            ? (new Date(donation.expires_at).getTime() - Date.now()) / 60000
+            : Number.POSITIVE_INFINITY;
+          const pickupFeasible = !match?.travel_minutes || remainingMinutes > match.travel_minutes;
+          const recipientAvailable = !match || (match.capacity_score ?? 1) > 0;
+          const riskLabel = remainingMinutes <= 0 || !pickupFeasible
+            ? 'CRITICAL'
+            : remainingMinutes <= 60 || !recipientAvailable || (match?.travel_minutes || 0) > 60
+              ? 'URGENT'
+              : remainingMinutes <= 120
+                ? 'AT RISK'
+                : 'SAFE';
+          return { ...donation, match, remainingMinutes, pickupFeasible, recipientAvailable, riskLabel };
+        })
+        .filter((donation) => donation.riskLabel !== 'SAFE')
+        .sort((first, second) => riskPriority[first.riskLabel] - riskPriority[second.riskLabel] || first.remainingMinutes - second.remainingMinutes)
+        .slice(0, 6));
+    } catch (requestError) {
+      setError('Backend unavailable');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { loadAnalytics(); }, [timeframe]);
+
+  const metrics = overview || {};
 
   const handleExportData = () => {
     addToast({
@@ -46,6 +103,8 @@ export default function AnalyticsPage() {
 
   return (
     <div className="space-y-8">
+      {error && <Card bodyClassName="p-4"><div className="flex items-center justify-between text-sm text-red-700"><span>{error}</span><Button onClick={loadAnalytics} variant="secondary" size="sm">Retry</Button></div></Card>}
+      {loading && <Card bodyClassName="p-4 text-sm text-slate-500">Loading live analytics...</Card>}
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -90,45 +149,82 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard
           title="Total Meals Rescued"
-          value={formatNumber(DASHBOARD_STATS.mealsRescued)}
-          trend="+24% YoY"
+          value={formatNumber(metrics.meals_rescued || 0)}
+          trend="Recorded completed donations"
           trendPositive={true}
           icon={UtensilsCrossed}
           iconBg="bg-emerald-50 text-emerald-600"
         />
         <StatCard
           title="Total Food Rescued"
-          value={DASHBOARD_STATS.foodRescuedFormatted}
-          trend="24.1 metric tons"
+          value={`${impact?.estimated_food_diverted_kg || 0} kg`}
+          trend="Estimated impact"
           trendPositive={true}
           icon={Scale}
           iconBg="bg-emerald-50 text-emerald-600"
         />
         <StatCard
           title="Total Donations"
-          value={formatNumber(DASHBOARD_STATS.successfulMatches + 48)}
-          trend="1,468 manifests"
+          value={formatNumber(metrics.total_donations || 0)}
+          trend="Backend records"
           trendPositive={true}
           icon={Calendar}
           iconBg="bg-blue-50 text-blue-600"
         />
         <StatCard
           title="Successful Rescues"
-          value={formatNumber(DASHBOARD_STATS.successfulMatches)}
-          trend="98.4% success"
+          value={formatNumber(metrics.successful_rescues || 0)}
+          trend={`${metrics.rescue_success_rate || 0}% rescue success rate`}
           trendPositive={true}
           icon={CheckCircle2}
           iconBg="bg-emerald-50 text-emerald-600"
         />
         <StatCard
           title="Average Matching Time"
-          value={`${DASHBOARD_STATS.avgMatchTimeMinutes} min`}
-          trend="-2.1m vs benchmark"
+          value={`${metrics.average_rescue_time_minutes || 0} min`}
+          trend="Average rescue time"
           trendPositive={true}
           icon={Clock}
           iconBg="bg-blue-50 text-blue-600"
         />
       </div>
+
+      <Card title="Operational Network" subtitle="Live counts and averages from backend records">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4 text-xs">
+          {[
+            ['At-risk donations', metrics.at_risk_donations || 0],
+            ['Expired donations', metrics.expired_donations || 0],
+            ['Active rescues', metrics.active_rescues || 0],
+            ['Available volunteers', metrics.available_volunteers || 0],
+            ['Active recipients', metrics.active_recipients || 0],
+            ['Avg match score', `${metrics.average_match_score || 0} / 100`],
+            ['Avg rescue distance', `${metrics.average_rescue_distance_km || 0} km`],
+          ].map(([label, value]) => (
+            <div key={label} className="border-l-2 border-emerald-500 pl-3">
+              <div className="text-slate-500">{label}</div>
+              <div className="text-lg font-semibold text-slate-900 mt-1">{value}</div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <Card title="At-Risk Radar" subtitle="Prioritized by remaining expiry window; verify recipient and pickup feasibility before dispatch.">
+        {riskDonations.length === 0 ? (
+          <div className="text-sm text-slate-500">No donations require immediate action.</div>
+        ) : (
+          <div className="space-y-2">
+            {riskDonations.map((donation) => (
+              <div key={donation.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2 last:border-0">
+                <div>
+                  <div className="text-sm font-semibold text-slate-900">{donation.food_name} <span className="text-[11px] text-red-700">{donation.riskLabel}</span></div>
+                  <div className="text-xs text-slate-500">{donation.quantity} · {donation.status || 'unmatched'} · {donation.pickupFeasible ? 'pickup feasible' : 'pickup at risk'}</div>
+                </div>
+                <div className="text-xs font-mono font-semibold text-red-700">{Math.max(0, Math.round(donation.remainingMinutes))} min · ETA {donation.match?.travel_minutes ?? 'n/a'} min</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
 
       {/* Charts Row 1: Monthly Rescues & Matching Time Trends */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

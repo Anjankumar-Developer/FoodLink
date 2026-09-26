@@ -14,10 +14,14 @@ import {
   ANALYTICS_DATA,
   DASHBOARD_STATS,
   USER_PROFILE_DATA,
+  MAP_ENTITIES,
 } from '../data/mockData';
 
 // API Base URL from environment or default to local proxy
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+const configuredApiBase = import.meta.env.VITE_API_BASE_URL || '/api';
+export const API_BASE_URL = configuredApiBase.replace(/\/$/, '').endsWith('/api')
+  ? configuredApiBase.replace(/\/$/, '')
+  : `${configuredApiBase.replace(/\/$/, '')}/api`;
 
 // In-memory persistent state for mock operations during development
 let mockDonations = [...RECENT_DONATIONS];
@@ -328,11 +332,12 @@ class ApiService {
       const response = await fetch(url, config);
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || errorData.error || `Request failed with status ${response.status}`);
+        const detail = errorData.detail || errorData.message || errorData.error;
+        throw new Error(detail || `Request failed with status ${response.status}`);
       }
       return await response.json();
     } catch (error) {
-      console.warn(`[API] Endpoint unavailable: ${endpoint} (${error.message}). Falling back to mock data if available.`);
+      console.warn(`[API] Endpoint unavailable: ${endpoint} (${error.message}).`);
       throw error;
     }
   }
@@ -340,183 +345,234 @@ class ApiService {
   // --- Donations Endpoints ---
   async getDonations(params) {
     if (this.useMock) return mockApi.getDonations(params);
-    try {
-      const query = params ? `?${new URLSearchParams(params)}` : '';
-      return await this.request(`/donations${query}`);
-    } catch (e) {
-      return mockApi.getDonations(params);
-    }
+    const query = params ? `?${new URLSearchParams(params)}` : '';
+    const data = await this.request(`/donations/${query}`);
+    return { success: true, data, total: data.length };
   }
 
   async getDonationById(id) {
     if (this.useMock) return mockApi.getDonationById(id);
-    try {
-      return await this.request(`/donations/${id}`);
-    } catch (e) {
-      return mockApi.getDonationById(id);
-    }
+    return { success: true, data: await this.request(`/donations/${id}`) };
   }
 
   async createDonation(donationData) {
     if (this.useMock) return mockApi.createDonation(donationData);
-    try {
-      return await this.request('/donations', {
+    return { success: true, data: await this.request('/donations/', {
         method: 'POST',
         body: JSON.stringify(donationData),
-      });
-    } catch (e) {
-      return mockApi.createDonation(donationData);
-    }
+      }) };
   }
 
   async updateDonation(id, updateData) {
     if (this.useMock) return mockApi.updateDonation(id, updateData);
-    try {
-      return await this.request(`/donations/${id}`, {
-        method: 'PATCH',
+    return { success: true, data: await this.request(`/donations/${id}`, {
+        method: 'PUT',
         body: JSON.stringify(updateData),
-      });
-    } catch (e) {
-      return mockApi.updateDonation(id, updateData);
-    }
+      }) };
+  }
+
+  async getRestaurants(params) {
+    if (this.useMock) return { success: true, data: [], total: 0 };
+    const query = params ? `?${new URLSearchParams(params)}` : '';
+    const data = await this.request(`/restaurants/${query}`);
+    return { success: true, data, total: data.length };
+  }
+
+  async getRestaurantById(id) {
+    if (this.useMock) return { success: true, data: null };
+    return { success: true, data: await this.request(`/restaurants/${id}`) };
+  }
+
+  async getRecipients(params) {
+    if (this.useMock) return mockApi.getShelters(params);
+    const query = params ? `?${new URLSearchParams(params)}` : '';
+    const data = await this.request(`/shelters/${query}`);
+    return { success: true, data, total: data.length };
+  }
+
+  async getRecipientById(id) {
+    if (this.useMock) return mockApi.getShelterById(id);
+    return { success: true, data: await this.request(`/shelters/${id}`) };
   }
 
   // --- Shelters Endpoints ---
   async getShelters(params) {
-    if (this.useMock) return mockApi.getShelters(params);
-    try {
-      const query = params ? `?${new URLSearchParams(params)}` : '';
-      return await this.request(`/shelters${query}`);
-    } catch (e) {
-      return mockApi.getShelters(params);
-    }
+    return this.getRecipients(params);
   }
 
   async getShelterById(id) {
-    if (this.useMock) return mockApi.getShelterById(id);
-    try {
-      return await this.request(`/shelters/${id}`);
-    } catch (e) {
-      return mockApi.getShelterById(id);
-    }
+    return this.getRecipientById(id);
   }
 
   async updateShelterDemand(id, mealsNeededTonight) {
     if (this.useMock) return mockApi.updateShelterDemand(id, mealsNeededTonight);
-    try {
-      return await this.request(`/shelters/${id}/demand`, {
-        method: 'PATCH',
-        body: JSON.stringify({ mealsNeededTonight }),
-      });
-    } catch (e) {
-      return mockApi.updateShelterDemand(id, mealsNeededTonight);
-    }
+    throw new Error('Recipient demand updates are not supported by the backend contract.');
   }
 
   // --- Agents Endpoints ---
   async getAgents() {
     if (this.useMock) return mockApi.getAgents();
-    try {
-      return await this.request('/agents');
-    } catch (e) {
-      return mockApi.getAgents();
-    }
+    throw new Error('Agent status listing is not exposed by the backend contract.');
+  }
+
+  async getAgentLogs(params) {
+    if (this.useMock) return mockApi.getAgents();
+    const query = params ? `?${new URLSearchParams(params)}` : '';
+    const data = await this.request(`/agent_logs/${query}`);
+    return { success: true, data, total: data.length };
   }
 
   async getAgentStatus(agentId) {
     if (this.useMock) return mockApi.getAgentStatus(agentId);
-    try {
-      const path = agentId ? `/agents/${agentId}/status` : '/agents/status';
-      return await this.request(path);
-    } catch (e) {
-      return mockApi.getAgentStatus(agentId);
-    }
+    throw new Error('Agent status endpoints are not exposed by the backend contract.');
   }
 
   async triggerConsensusCycle() {
     if (this.useMock) return mockApi.triggerConsensusCycle();
-    try {
-      return await this.request('/agents/consensus', { method: 'POST' });
-    } catch (e) {
-      return mockApi.triggerConsensusCycle();
-    }
+    return this.coordinate({});
   }
 
   // --- Matches Endpoints ---
   async getMatches(params) {
     if (this.useMock) return mockApi.getMatches();
-    try {
-      const query = params ? `?${new URLSearchParams(params)}` : '';
-      return await this.request(`/matches${query}`);
-    } catch (e) {
-      return mockApi.getMatches();
-    }
+    const query = params ? `?${new URLSearchParams(params)}` : '';
+    const data = await this.request(`/matches/${query}`);
+    return { success: true, data, total: data.length };
+  }
+
+  async getMatchesForDonation(donationId) {
+    if (this.useMock) return mockApi.getMatches();
+    const data = await this.request(`/matches/donation/${donationId}`);
+    return { success: true, data, total: data.length };
+  }
+
+  async generateMatches(donationId) {
+    if (this.useMock) return mockApi.getMatches();
+    const data = await this.request(`/matches/generate/${donationId}`, { method: 'POST' });
+    return { success: true, data, total: data.length };
   }
 
   async acceptMatch(matchId) {
     if (this.useMock) return mockApi.acceptMatch(matchId);
-    try {
-      return await this.request(`/matches/${matchId}/accept`, {
-        method: 'POST',
-      });
-    } catch (e) {
-      return mockApi.acceptMatch(matchId);
-    }
+    throw new Error('Match approval is not supported by the backend contract.');
   }
 
   // --- Volunteers Endpoints ---
   async getVolunteers(params) {
     if (this.useMock) return mockApi.getVolunteers();
-    try {
-      const query = params ? `?${new URLSearchParams(params)}` : '';
-      return await this.request(`/volunteers${query}`);
-    } catch (e) {
-      return mockApi.getVolunteers();
+    const query = params ? `?${new URLSearchParams(params)}` : '';
+    const data = await this.request(`/volunteers/${query}`);
+    return { success: true, data, total: data.length };
+  }
+
+  async getMapData() {
+    if (this.useMock) {
+      return {
+        success: true,
+        data: {
+          restaurants: MAP_ENTITIES.filter((item) => item.type === 'restaurant').map((item) => ({
+            id: item.id, name: item.name, latitude: item.lat, longitude: item.lng,
+          })),
+          recipients: MAP_ENTITIES.filter((item) => item.type === 'shelter').map((item) => ({
+            id: item.id, name: item.name, latitude: item.lat, longitude: item.lng,
+          })),
+          volunteers: MAP_ENTITIES.filter((item) => item.type === 'volunteer').map((item) => ({
+            id: item.id, name: item.name, latitude: item.lat, longitude: item.lng,
+          })),
+          rescues: [],
+          donations: [],
+        },
+      };
     }
+    const [restaurants, recipients, volunteers, rescues, donations] = await Promise.all([
+      this.request('/map/restaurants'),
+      this.request('/map/recipients'),
+      this.getVolunteers(),
+      this.request('/map/active-rescues'),
+      this.getDonations(),
+    ]);
+    return {
+      success: true,
+      data: { restaurants, recipients, volunteers: volunteers.data, rescues, donations: donations.data },
+    };
+  }
+
+  analyzeFood(payload) {
+    return this.request('/agents/analyze-food', { method: 'POST', body: JSON.stringify(payload) });
+  }
+
+  findRecipients(payload) {
+    return this.request('/agents/find-recipients', { method: 'POST', body: JSON.stringify(payload) });
+  }
+
+  calculateRoute(payload) {
+    return this.request('/agents/calculate-route', { method: 'POST', body: JSON.stringify(payload) });
+  }
+
+  coordinate(payload) {
+    return this.request('/agents/coordinate', { method: 'POST', body: JSON.stringify(payload) });
+  }
+
+  rescueDonation(donationId) {
+    return this.request(`/agents/rescue/${donationId}`, { method: 'POST' });
+  }
+
+  startRescue(donationId) {
+    return this.request(`/rescue/start/${donationId}`, { method: 'POST' });
+  }
+
+  getRescue(rescueId) {
+    return this.request(`/rescue/${rescueId}`);
+  }
+
+  approveRescue(rescueId) {
+    return this.request(`/rescue/${rescueId}/approve`, { method: 'POST' });
+  }
+
+  assignVolunteer(rescueId, volunteerId) {
+    return this.request(`/rescue/${rescueId}/assign-volunteer`, {
+      method: 'POST',
+      body: JSON.stringify({ volunteer_id: volunteerId }),
+    });
+  }
+
+  pickupRescue(rescueId) {
+    return this.request(`/rescue/${rescueId}/pickup`, { method: 'POST' });
+  }
+
+  deliverRescue(rescueId) {
+    return this.request(`/rescue/${rescueId}/delivery`, { method: 'POST' });
+  }
+
+  completeRescue(rescueId) {
+    return this.request(`/rescue/${rescueId}/complete`, { method: 'POST' });
   }
 
   async updateVolunteerStatus(volunteerId, status) {
     if (this.useMock) return mockApi.updateVolunteerStatus(volunteerId, status);
-    try {
-      return await this.request(`/volunteers/${volunteerId}/status`, {
-        method: 'PATCH',
-        body: JSON.stringify({ status }),
-      });
-    } catch (e) {
-      return mockApi.updateVolunteerStatus(volunteerId, status);
-    }
+    throw new Error('Volunteer status updates are not supported by the backend contract.');
   }
 
   // --- Analytics & Stats Endpoints ---
   async getAnalytics(timeframe = '6m') {
     if (this.useMock) return mockApi.getAnalytics(timeframe);
-    try {
-      return await this.request(`/analytics?timeframe=${timeframe}`);
-    } catch (e) {
-      return mockApi.getAnalytics(timeframe);
-    }
+    return { success: true, data: await this.request(`/analytics/overview?timeframe=${timeframe}`) };
+  }
+
+  async getAnalyticsImpact() {
+    if (this.useMock) return { success: true, data: {} };
+    return { success: true, data: await this.request('/analytics/impact') };
   }
 
   async getDashboardStats() {
     if (this.useMock) return mockApi.getDashboardStats();
-    try {
-      return await this.request('/stats');
-    } catch (e) {
-      return mockApi.getDashboardStats();
-    }
+    throw new Error('Dashboard stats are derived from backend resources.');
   }
 
   // --- Auth Endpoints ---
   async login(credentials) {
     if (this.useMock) return mockApi.login(credentials);
-    try {
-      return await this.request('/auth/login', {
-        method: 'POST',
-        body: JSON.stringify(credentials),
-      });
-    } catch (e) {
-      return mockApi.login(credentials);
-    }
+    throw new Error('Authentication is not exposed by the backend contract.');
   }
 
   // --- Gemini AI Live Server Endpoints ---

@@ -18,6 +18,7 @@ import Button from '../components/common/Button';
 import { useToast } from '../components/common/Toast';
 import { addNewDonation } from '../data/mockData';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
+import { api } from '../services/api';
 
 export default function CreateDonationPage() {
   const navigate = useNavigate();
@@ -75,7 +76,7 @@ export default function CreateDonationPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.foodName || !formData.quantity) {
       addToast({
@@ -87,8 +88,28 @@ export default function CreateDonationPage() {
     }
 
     setIsSubmitting(true);
-    setTimeout(() => {
-      addNewDonation(formData);
+    try {
+      const restaurantsResponse = await api.getRestaurants();
+      const restaurant = (restaurantsResponse.data || []).find(
+        (item) => item.name.toLowerCase() === formData.restaurant.toLowerCase()
+      ) || restaurantsResponse.data?.[0];
+
+      if (!restaurant) throw new Error('No restaurant is available in the backend.');
+
+      const expiryHours = Number(formData.expiryTime.match(/[\d.]+/)?.[0]) || 2;
+      const preparedAt = new Date();
+      const expiresAt = new Date(preparedAt.getTime() + expiryHours * 3600000);
+      await api.createDonation({
+        restaurant_id: restaurant.id,
+        food_name: formData.foodName,
+        food_category: formData.category,
+        quantity: formData.quantity,
+        diet_type: formData.dietType,
+        prepared_at: preparedAt.toISOString(),
+        expires_at: expiresAt.toISOString(),
+        storage_condition: formData.storageCondition,
+        status: 'available',
+      });
       setIsSubmitting(false);
       addToast({
         title: 'Food Surplus Registered',
@@ -96,7 +117,14 @@ export default function CreateDonationPage() {
         type: 'success',
       });
       navigate('/matches');
-    }, 700);
+    } catch (error) {
+      setIsSubmitting(false);
+      addToast({
+        title: 'Backend unavailable',
+        message: error.message || 'Donation could not be registered.',
+        type: 'error',
+      });
+    }
   };
 
   return (

@@ -6,8 +6,10 @@ class AgentLogBase(BaseModel):
     donation_id: int
     agent_name: str
     action: str
-    reasoning: Optional[str] = None
+    input_summary: Optional[str] = None
+    output_summary: Optional[str] = None
     status: Optional[str] = None
+    execution_time_ms: Optional[int] = None
 
 class AgentLogCreate(AgentLogBase):
     pass

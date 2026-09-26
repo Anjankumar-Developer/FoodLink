@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from scripts.init_db import init_db
 
 from .config import settings
-from .routes import restaurant, shelter, donation, volunteer, match, pickup, agent_log, analytics, map, agent
+from .routes import restaurant, shelter, donation, volunteer, match, pickup, agent_log, analytics, map, agent, rescue
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -19,7 +19,10 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # For development, restrict in production
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -46,6 +49,7 @@ app.include_router(agent_log.router, tags=["agent_logs"])
 app.include_router(analytics.router, tags=["analytics"])
 app.include_router(map.router, tags=["maps"])
 app.include_router(agent.router, tags=["agents"])
+app.include_router(rescue.router, tags=["rescue"])
 
 if __name__ == "__main__":
     import uvicorn

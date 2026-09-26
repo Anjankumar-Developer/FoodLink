@@ -5,6 +5,7 @@ from typing import List, Optional
 from ..database import get_db
 from ..models import match as match_model
 from ..schemas import match as match_schema
+from ..services.matching_engine import MatchingEngine
 
 router = APIRouter(
     prefix="/api/matches",
@@ -51,3 +52,18 @@ def delete_match(match_id: int, db: Session = Depends(get_db)):
     db.delete(db_match)
     db.commit()
     return None
+
+@router.get("/donation/{donation_id}", response_model=List[match_schema.Match])
+def get_matches_for_donation(donation_id: str, db: Session = Depends(get_db)):
+    """Get all matches for a specific donation."""
+    matches = db.query(match_model.Match).filter(
+        match_model.Match.donation_id == donation_id
+    ).all()
+    return matches
+
+@router.post("/generate/{donation_id}", response_model=List[match_schema.Match])
+def generate_matches_for_donation(donation_id: str, db: Session = Depends(get_db)):
+    """Generate and save matches for a specific donation using the matching engine."""
+    matching_engine = MatchingEngine(db)
+    matches = matching_engine.generate_and_save_matches_for_donation(donation_id)
+    return matches

@@ -1,0 +1,25 @@
+food_type_id,food_category,description,possible_diet_types,default_urgency,typical_shelf_life
+FT001,cooked_meal,Prepared cooked meals,vegetarian|vegan|non_vegetarian|egg,high,2-8 hours
+FT002,rice,Cooked/plain rice,vegetarian|vegan,high,2-6 hours
+FT003,biryani,Rice-based prepared meal,vegetarian|non_vegetarian|egg,high,2-6 hours
+FT004,bread,Bread and buns,vegetarian|vegan,medium,12-48 hours
+FT005,bakery,Bakery products,vegetarian|egg,medium,12-48 hours
+FT006,vegetables,Fresh/cooked vegetables,vegetarian|vegan,medium,12-48 hours
+FT007,fruits,Fresh fruit,vegetarian|vegan,medium,24-72 hours
+FT008,sandwich,Prepared sandwiches,vegetarian|egg|non_vegetarian,high,2-8 hours
+FT009,packaged_food,Sealed packaged food,vegetarian|vegan|non_vegetarian,low,7-365 days
+FT010,dal,Cooked lentils/dal,vegetarian|vegan,high,2-6 hours
+FT011,roti,Roti/chapati/flatbread,vegetarian|vegan,medium,4-12 hours
+FT012,pulao,Prepared pulao,vegetarian|non_vegetarian,high,2-6 hours
+FT013,curry,Prepared curry,vegetarian|non_vegetarian,high,2-6 hours
+FT014,idli,Prepared idli,vegetarian|vegan,high,4-10 hours
+FT015,dosa,Prepared dosa,vegetarian|vegan,high,2-6 hours
+FT016,upma,Prepared upma,vegetarian|vegan,high,2-8 hours
+FT017,chapati,Chapati/roti,vegetarian|vegan,medium,4-12 hours
+FT018,poori,Prepared poori,vegetarian|vegan,medium,4-12 hours
+FT019,curd,Dairy/curd-based food,vegetarian,high,2-8 hours
+FT020,milk,Milk/dairy beverage,vegetarian,high,2-8 hours
+FT021,snacks,Prepared savoury snacks,vegetarian|vegan|egg,medium,4-24 hours
+FT022,water,Sealed drinking water,vegetarian|vegan,low,30-365 days
+FT023,meal_kit,Ready-to-distribute meal kit,vegetarian|vegan|non_vegetarian|egg,medium,12-48 hours
+FT024,mixed_food,Mixed food donation,vegetarian|vegan|non_vegetarian|egg,high,2-12 hours

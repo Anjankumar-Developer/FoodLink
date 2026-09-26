@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Users,
@@ -16,11 +16,39 @@ import Badge from '../components/common/Badge';
 import Button from '../components/common/Button';
 import { VOLUNTEERS_DATA } from '../data/mockData';
 import { useToast } from '../components/common/Toast';
+import { api } from '../services/api';
 
 export default function VolunteersPage() {
   const navigate = useNavigate();
   const { addToast } = useToast();
-  const [volunteers, setVolunteers] = useState(VOLUNTEERS_DATA);
+  const [volunteers, setVolunteers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const loadVolunteers = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await api.getVolunteers();
+      setVolunteers((response.data || []).map((item) => ({
+        ...item,
+        vehicleType: item.vehicleType || item.vehicle_type || 'Vehicle unavailable',
+        vehicleCapacity: item.vehicleCapacity || 'Backend capacity unavailable',
+        status: item.status || item.availability || 'Unknown',
+        rating: item.rating || 'n/a',
+        operatingRadiusMiles: item.operatingRadiusMiles || 'n/a',
+        phone: item.phone || 'Backend contact unavailable',
+        completedRescues: item.completedRescues || 0,
+        foodHandlerCertified: Boolean(item.foodHandlerCertified),
+      })));
+    } catch (requestError) {
+      setError('Backend unavailable');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { loadVolunteers(); }, []);
 
   const handleToggleStatus = (id) => {
     setVolunteers((prev) =>
@@ -69,8 +97,11 @@ export default function VolunteersPage() {
         </div>
       </div>
 
+      {error && <Card bodyClassName="p-4"><div className="flex items-center justify-between text-sm text-red-700"><span>{error}</span><Button onClick={loadVolunteers} variant="secondary" size="sm">Retry</Button></div></Card>}
+      {loading && <Card bodyClassName="p-8 text-center text-sm text-slate-500">Loading volunteers...</Card>}
+
       {/* Volunteer Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {!loading && <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {volunteers.map((vol) => (
           <div
             key={vol.id}
@@ -159,7 +190,7 @@ export default function VolunteersPage() {
             </div>
           </div>
         ))}
-      </div>
+      </div>}
     </div>
   );
 }

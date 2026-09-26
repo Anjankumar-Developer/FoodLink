@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Home,
@@ -19,16 +19,45 @@ import Modal from '../components/common/Modal';
 import { SHELTERS_DATA } from '../data/mockData';
 import { useToast } from '../components/common/Toast';
 import GoogleMapsGroundingSearch from '../components/maps/GoogleMapsGroundingSearch';
+import { api } from '../services/api';
 
 export default function SheltersPage() {
   const navigate = useNavigate();
   const { addToast } = useToast();
-  const [shelters, setShelters] = useState(SHELTERS_DATA);
+  const [shelters, setShelters] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedShelter, setSelectedShelter] = useState(null);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [newMealsNeeded, setNewMealsNeeded] = useState(30);
   const [showMapsGrounding, setShowMapsGrounding] = useState(false);
+
+  const loadShelters = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await api.getRecipients();
+      setShelters((response.data || []).map((item) => ({
+        ...item,
+        category: item.accepted_food_types || 'Verified recipient',
+        capacityTotal: item.capacity,
+        currentOccupancy: Math.max(0, item.capacity - (item.current_demand || 0)),
+        mealsNeededTonight: item.current_demand || 0,
+        status: item.verified ? 'Accepting' : 'Pending verification',
+        dietaryFocus: (item.accepted_food_types || '').split(',').filter(Boolean),
+        intakeSchedule: 'Backend schedule unavailable',
+        phone: 'Backend contact unavailable',
+        contactPerson: 'Recipient coordinator',
+      })));
+    } catch (requestError) {
+      setError('Backend unavailable');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { loadShelters(); }, []);
 
   const filteredShelters = shelters.filter(
     (s) =>
@@ -91,6 +120,8 @@ export default function SheltersPage() {
           <GoogleMapsGroundingSearch />
         </div>
       )}
+      {error && <Card bodyClassName="p-4"><div className="flex items-center justify-between text-sm text-red-700"><span>{error}</span><Button onClick={loadShelters} variant="secondary" size="sm">Retry</Button></div></Card>}
+      {loading && <Card bodyClassName="p-8 text-center text-sm text-slate-500">Loading recipients...</Card>}
 
       {/* Search Bar */}
       <Card bodyClassName="p-4">
@@ -107,7 +138,7 @@ export default function SheltersPage() {
       </Card>
 
       {/* Shelter Cards Grid */}
-      {filteredShelters.length === 0 ? (
+      {!loading && filteredShelters.length === 0 ? (
         <Card bodyClassName="p-12 text-center">
           <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto text-slate-400 mb-3">
             <Home className="w-6 h-6" />
@@ -125,7 +156,7 @@ export default function SheltersPage() {
             Clear Filter
           </Button>
         </Card>
-      ) : (
+      ) : !loading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredShelters.map((shelter) => {
           const occupancyRate = Math.round((shelter.currentOccupancy / shelter.capacityTotal) * 100);

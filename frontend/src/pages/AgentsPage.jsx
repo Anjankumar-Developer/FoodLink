@@ -1,28 +1,60 @@
-import React, { useState } from 'react';
-import {
-  Bot,
-  ShieldCheck,
-  CheckCircle2,
-  Clock,
-  Sparkles,
-  Play,
-  RotateCw,
-  Cpu,
-  Terminal,
-  Activity,
-} from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Bot, CheckCircle2, RotateCw, Terminal, Activity } from 'lucide-react';
 import Card from '../components/common/Card';
 import Badge from '../components/common/Badge';
 import Button from '../components/common/Button';
-import { AGENT_MONITOR_DATA } from '../data/mockData';
 import { useToast } from '../components/common/Toast';
+import { api } from '../services/api';
+
+const AGENT_DEFINITIONS = [
+  { key: 'FoodAgent', name: 'Food Agent', workflow: 'Food analyzed' },
+  { key: 'RecipientAgent', name: 'Recipient Agent', workflow: 'Recipients evaluated' },
+  { key: 'RouteAgent', name: 'Route Agent', workflow: 'Routes calculated' },
+  { key: 'CoordinatorAgent', name: 'Coordinator Agent', workflow: 'Match coordinated' },
+];
 
 export default function AgentsPage() {
   const { addToast } = useToast();
-  const [agents, setAgents] = useState(AGENT_MONITOR_DATA);
+  const [agents, setAgents] = useState([]);
   const [isSimulating, setIsSimulating] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const handleRunNegotiationCycle = () => {
+  const loadAgentLogs = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await api.getAgentLogs({ limit: 100 });
+      const logs = [...(response.data || [])].sort(
+        (first, second) => new Date(second.created_at || 0) - new Date(first.created_at || 0)
+      );
+      setAgents(AGENT_DEFINITIONS.map((definition) => {
+        const agentLogs = logs.filter((log) => log.agent_name === definition.key);
+        const latest = agentLogs[0];
+        return {
+          id: definition.key,
+          name: definition.name,
+          role: definition.workflow,
+          status: latest?.status || 'Awaiting activity',
+          currentAction: latest?.action || definition.workflow,
+          completedActions: [latest?.output_summary || 'No execution recorded yet'],
+          reasoningPreview: latest?.input_summary || 'No reasoning details returned.',
+          lastUpdated: latest?.created_at || 'No activity',
+          executionTime: latest?.execution_time_ms,
+          result: latest?.output_summary || 'No result recorded yet',
+          tasksCompletedToday: agentLogs.length,
+        };
+      }));
+    } catch (requestError) {
+      setError('Backend unavailable');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { loadAgentLogs(); }, []);
+
+  const handleRunNegotiationCycle = async () => {
     setIsSimulating(true);
     addToast({
       title: 'Consensus Cycle Initiated',
@@ -30,14 +62,19 @@ export default function AgentsPage() {
       type: 'info',
     });
 
-    setTimeout(() => {
+    try {
+      await api.triggerConsensusCycle();
+      await loadAgentLogs();
       setIsSimulating(false);
       addToast({
         title: 'Multi-Agent Consensus Reached',
         message: 'All constraints verified. Dispatches cleared for execution.',
         type: 'success',
       });
-    }, 1200);
+    } catch (requestError) {
+      setIsSimulating(false);
+      addToast({ title: 'Backend unavailable', message: requestError.message, type: 'error' });
+    }
   };
 
   return (
@@ -66,7 +103,11 @@ export default function AgentsPage() {
         </div>
       </div>
 
+      {error && <Card bodyClassName="p-4"><div className="flex items-center justify-between text-sm text-red-700"><span>{error}</span><Button onClick={loadAgentLogs} variant="secondary" size="sm">Retry</Button></div></Card>}
+      {loading && <Card bodyClassName="p-8 text-center text-sm text-slate-500">Loading agent activity...</Card>}
+
       {/* Agents Operational Grid */}
+      {!loading && !error && agents.length > 0 && (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {agents.map((agent) => (
           <div
@@ -105,6 +146,7 @@ export default function AgentsPage() {
               <p className="text-xs font-medium text-slate-800 leading-relaxed">
                 {agent.currentAction}
               </p>
+              <p className="text-[11px] text-slate-500">Execution time: {agent.executionTime ?? 'n/a'} ms</p>
             </div>
 
             {/* Reasoning Preview Box */}
@@ -116,6 +158,7 @@ export default function AgentsPage() {
               <p className="text-xs text-emerald-950 font-mono leading-relaxed bg-white/70 p-2.5 rounded border border-emerald-100">
                 "{agent.reasoningPreview}"
               </p>
+              <p className="text-xs text-emerald-900"><strong>Result:</strong> {agent.result}</p>
             </div>
 
             {/* Completed Actions List */}
@@ -141,6 +184,7 @@ export default function AgentsPage() {
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 }
