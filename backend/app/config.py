@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     PROJECT_NAME: str = "FoodLink API"
     VERSION: str = "1.0.0"
+    PORT: int = 8000
     GEMINI_API_KEY: Optional[str] = None
     CORS_ALLOWED_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173"
 
