@@ -12,8 +12,61 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const BACKEND_URL = process.env.VITE_API_BASE_URL || 'http://localhost:8000';
+
+const proxyablePaths = new Set(['/api/chat', '/api/transcribe', '/api/maps-grounding']);
 
 app.use(express.json({ limit: '50mb' }));
+
+app.use(async (req, res, next) => {
+  const pathname = req.path || '/';
+  const shouldProxy = pathname.startsWith('/auth') || (pathname.startsWith('/api') && !proxyablePaths.has(pathname));
+
+  if (!shouldProxy) {
+    return next();
+  }
+
+  try {
+    const targetUrl = new URL(req.originalUrl, BACKEND_URL);
+    const headers = {
+      ...req.headers,
+      host: undefined,
+      connection: undefined,
+    };
+
+    const payload = req.body && Object.keys(req.body).length > 0 ? JSON.stringify(req.body) : undefined;
+
+    const response = await fetch(targetUrl, {
+      method: req.method,
+      headers: Object.fromEntries(
+        Object.entries(headers).filter(([key, value]) => value !== undefined && value !== null)
+      ),
+      body: ['GET', 'HEAD'].includes(req.method) ? undefined : payload,
+    });
+
+    res.status(response.status);
+    response.headers.forEach((value, key) => {
+      if (['transfer-encoding', 'content-length'].includes(key.toLowerCase())) {
+        return;
+      }
+      res.setHeader(key, value);
+    });
+
+    const responseBuffer = Buffer.from(await response.arrayBuffer());
+    if (responseBuffer.length > 0) {
+      res.send(responseBuffer);
+      return;
+    }
+
+    res.end();
+  } catch (error) {
+    console.error('Proxy error:', error);
+    res.status(502).json({
+      error: 'Backend unavailable',
+      message: error.message,
+    });
+  }
+});
 
 // Helper to initialize GoogleGenAI safely with aistudio-build telemetry
 function getAI() {
